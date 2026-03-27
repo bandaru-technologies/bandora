@@ -54,4 +54,30 @@ public class ClinicController {
                 "available", s.isAvailable()
         )).toList());
     }
+
+    @PostMapping("/slots/{slotId}/book")
+    public ResponseEntity<?> bookSlot(@PathVariable Long slotId) {
+        return slotRepository.findById(slotId).map(slot -> {
+            if (!slot.isAvailable()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Slot is already booked"));
+            }
+            slot.setAvailable(false);
+            slotRepository.save(slot);
+            return ResponseEntity.ok(Map.of(
+                    "slotId", slot.getId(),
+                    "date", slot.getDate(),
+                    "time", slot.getTime(),
+                    "message", "Booking confirmed"
+            ));
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/slots/{slotId}/cancel")
+    public ResponseEntity<?> cancelSlot(@PathVariable Long slotId) {
+        return slotRepository.findById(slotId).map(slot -> {
+            slot.setAvailable(true);
+            slotRepository.save(slot);
+            return ResponseEntity.ok(Map.of("message", "Appointment cancelled"));
+        }).orElse(ResponseEntity.notFound().build());
+    }
 }

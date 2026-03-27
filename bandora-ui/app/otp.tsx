@@ -19,7 +19,7 @@ const API_URL = `${API_BASE}/api/auth`;
 const OTP_LENGTH = 6;
 
 export default function OtpScreen() {
-  const { phoneNumber, otp: debugOtp } = useLocalSearchParams<{ phoneNumber: string; otp: string }>();
+  const { phoneNumber } = useLocalSearchParams<{ phoneNumber: string }>();
   const [digits, setDigits] = useState<string[]>(Array(OTP_LENGTH).fill(''));
   const [loading, setLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(30);
@@ -118,13 +118,6 @@ export default function OtpScreen() {
           Enter the 6-digit OTP sent to{'\n'}
           <Text style={styles.phone}>+91 {phoneNumber}</Text>
         </Text>
-
-        {/* OTP debug hint */}
-        {debugOtp ? (
-          <View style={styles.debugBox}>
-            <Text style={styles.debugText}>Dev OTP: {debugOtp}</Text>
-          </View>
-        ) : null}
 
         {/* OTP boxes */}
         <View style={styles.otpRow}>
@@ -230,18 +223,6 @@ const styles = StyleSheet.create({
   phone: {
     fontWeight: '700',
     color: '#1a1a1a',
-  },
-  debugBox: {
-    backgroundColor: '#FFF3CD',
-    borderRadius: 6,
-    padding: 8,
-    marginBottom: 16,
-  },
-  debugText: {
-    fontSize: 13,
-    color: '#856404',
-    textAlign: 'center',
-    fontWeight: '600',
   },
   otpRow: {
     flexDirection: 'row',

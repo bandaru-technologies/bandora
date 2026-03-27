@@ -6,6 +6,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { API_BASE } from '@/constants/api';
+import { useAppointments } from '@/context/AppointmentsContext';
 
 type Slot = {
   id: number;
@@ -22,6 +23,22 @@ function formatDate(dateStr: string) {
   return d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
 }
 
+// Returns true if this slot is in the future relative to now
+function isSlotFuture(date: string, time: string): boolean {
+  const now = new Date();
+  const today = now.toISOString().split('T')[0];
+  if (date < today) return false;
+  if (date > today) return true;
+  // Same day — compare time
+  const [timePart, meridiem] = time.split(' ');
+  let [h, m] = timePart.split(':').map(Number);
+  if (meridiem === 'PM' && h !== 12) h += 12;
+  if (meridiem === 'AM' && h === 12) h = 0;
+  const slotTime = new Date();
+  slotTime.setHours(h, m, 0, 0);
+  return slotTime > now;
+}
+
 export default function SlotsScreen() {
   const { departmentId, deptName, storeName, doctorName, fee } = useLocalSearchParams<{
     departmentId: string;
@@ -31,45 +48,81 @@ export default function SlotsScreen() {
     fee: string;
   }>();
   const router = useRouter();
+  const { addAppointment } = useAppointments();
 
   const [slots, setSlots] = useState<Slot[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<string>('Morning');
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
+  const [booking, setBooking] = useState(false);
 
-  // Unique dates from slots
-  const dates = [...new Set(slots.map(s => s.date))].sort();
+  // Only future slots
+  const futureSlots = slots.filter(s => isSlotFuture(s.date, s.time));
+
+  // Unique future dates
+  const dates = [...new Set(futureSlots.map(s => s.date))].sort();
 
   useEffect(() => {
     fetch(`${API_BASE}/api/clinics/departments/${departmentId}/slots`)
       .then(r => r.json())
       .then((data: Slot[]) => {
         setSlots(data);
-        if (data.length > 0) {
-          const firstDate = [...new Set(data.map(s => s.date))].sort()[0];
-          setSelectedDate(firstDate);
-        }
+        // Default to first future date
+        const futureDates = [...new Set(data.filter(s => isSlotFuture(s.date, s.time)).map(s => s.date))].sort();
+        if (futureDates.length > 0) setSelectedDate(futureDates[0]);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [departmentId]);
 
-  const filteredSlots = slots.filter(
+  const filteredSlots = futureSlots.filter(
     s => s.date === selectedDate && s.period === selectedPeriod
   );
 
   const periodsWithSlots = PERIODS.filter(p =>
-    slots.some(s => s.date === selectedDate && s.period === p)
+    futureSlots.some(s => s.date === selectedDate && s.period === p)
   );
 
-  const handleConfirm = () => {
+  // Auto-select first period that has slots when date changes
+  useEffect(() => {
+    if (!periodsWithSlots.includes(selectedPeriod) && periodsWithSlots.length > 0) {
+      setSelectedPeriod(periodsWithSlots[0]);
+    }
+  }, [selectedDate]);
+
+  const handleConfirm = async () => {
     if (!selectedSlot) return;
-    Alert.alert(
-      'Appointment Confirmed!',
-      `${deptName}\n${doctorName}\n${formatDate(selectedSlot.date)} at ${selectedSlot.time}`,
-      [{ text: 'OK', onPress: () => router.push('/(tabs)') }]
-    );
+    setBooking(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/clinics/slots/${selectedSlot.id}/book`, { method: 'POST' });
+      const data = await res.json();
+      if (res.ok) {
+        setSlots(prev => prev.map(s => s.id === selectedSlot.id ? { ...s, available: false } : s));
+        await addAppointment({
+          slotId: selectedSlot.id,
+          deptName,
+          doctorName,
+          storeName,
+          date: selectedSlot.date,
+          time: selectedSlot.time,
+          fee: parseFloat(fee),
+        });
+        setSelectedSlot(null);
+        router.replace({
+          pathname: '/booking-confirmed' as any,
+          params: { deptName, doctorName, storeName, date: selectedSlot.date, time: selectedSlot.time, fee },
+        });
+      } else {
+        Alert.alert('Booking Failed', data.message || 'This slot is no longer available. Please choose another.');
+        setSlots(prev => prev.map(s => s.id === selectedSlot.id ? { ...s, available: false } : s));
+        setSelectedSlot(null);
+      }
+    } catch {
+      Alert.alert('Error', 'Could not connect to server. Please try again.');
+    } finally {
+      setBooking(false);
+    }
   };
 
   return (
@@ -91,10 +144,10 @@ export default function SlotsScreen() {
           <ActivityIndicator size="large" color="#006491" />
           <Text style={styles.loadingText}>Loading slots...</Text>
         </View>
-      ) : slots.length === 0 ? (
+      ) : dates.length === 0 ? (
         <View style={styles.center}>
           <Ionicons name="calendar-outline" size={56} color="#ccc" />
-          <Text style={styles.emptyText}>No slots available</Text>
+          <Text style={styles.emptyText}>No upcoming slots available</Text>
         </View>
       ) : (
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -207,8 +260,10 @@ export default function SlotsScreen() {
             <Text style={styles.footerDate}>{formatDate(selectedSlot.date)}</Text>
             <Text style={styles.footerTime}>{selectedSlot.time}</Text>
           </View>
-          <TouchableOpacity style={styles.confirmBtn} onPress={handleConfirm}>
-            <Text style={styles.confirmBtnText}>Confirm Booking</Text>
+          <TouchableOpacity style={styles.confirmBtn} onPress={handleConfirm} disabled={booking}>
+            {booking
+              ? <ActivityIndicator color="#fff" />
+              : <Text style={styles.confirmBtnText}>Confirm Booking</Text>}
           </TouchableOpacity>
         </View>
       )}

@@ -14,6 +14,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { API_BASE } from '@/constants/api';
+import { useCart } from '@/context/CartContext';
 const API_URL = `${API_BASE}/api/stores`;
 
 type Product = {
@@ -45,13 +46,17 @@ export default function StoreProductsScreen() {
   const { storeId, storeName } = useLocalSearchParams<{ storeId: string; storeName: string }>();
   const router = useRouter();
 
+  const { cart: globalCart, addToCart: addToGlobalCart, removeFromCart: removeFromGlobalCart, totalItems, totalPrice } = useCart();
   const [products, setProducts] = useState<Product[]>([]);
   const [filtered, setFiltered] = useState<Product[]>([]);
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState(ALL_TAB);
   const [subCategories, setSubCategories] = useState<string[]>([]);
-  const [cart, setCart] = useState<Record<number, number>>({});
   const [loading, setLoading] = useState(true);
+
+  // Local view of cart counts for this store
+  const cart: Record<number, number> = {};
+  Object.values(globalCart).forEach(item => { cart[item.id] = item.qty; });
 
   useEffect(() => {
     fetch(`${API_URL}/${storeId}/products`)
@@ -76,23 +81,12 @@ export default function StoreProductsScreen() {
   }, [search, activeTab, products]);
 
   const addToCart = (product: Product) => {
-    setCart(prev => ({ ...prev, [product.id]: (prev[product.id] ?? 0) + 1 }));
+    addToGlobalCart({ id: product.id, name: product.name, price: product.price, unit: product.unit, subCategory: product.subCategory }, storeId, storeName ?? storeId);
   };
 
   const removeFromCart = (productId: number) => {
-    setCart(prev => {
-      const qty = (prev[productId] ?? 0) - 1;
-      if (qty <= 0) {
-        const next = { ...prev };
-        delete next[productId];
-        return next;
-      }
-      return { ...prev, [productId]: qty };
-    });
+    removeFromGlobalCart(productId);
   };
-
-  const totalItems = Object.values(cart).reduce((a, b) => a + b, 0);
-  const totalPrice = products.reduce((sum, p) => sum + (cart[p.id] ?? 0) * p.price, 0);
 
   const iconStyle = (sub: string) =>
     SUBCATEGORY_STYLE[sub] ?? { bg: '#F5F5F5', iconColor: '#666', icon: 'pricetag-outline' };
@@ -170,7 +164,7 @@ export default function StoreProductsScreen() {
           <Text style={styles.headerTitle}>{storeName}</Text>
           <Text style={styles.headerSub}>Grocery Store</Text>
         </View>
-        <TouchableOpacity style={styles.cartIconBtn}>
+        <TouchableOpacity style={styles.cartIconBtn} onPress={() => router.push('/cart' as any)}>
           <Ionicons name="cart-outline" size={24} color="#fff" />
           {totalItems > 0 && (
             <View style={styles.cartBadge}>
@@ -249,7 +243,7 @@ export default function StoreProductsScreen() {
             <Text style={styles.cartFooterItems}>{totalItems} item{totalItems > 1 ? 's' : ''}</Text>
             <Text style={styles.cartFooterPrice}>₹{totalPrice.toFixed(0)}</Text>
           </View>
-          <TouchableOpacity style={styles.checkoutBtn}>
+          <TouchableOpacity style={styles.checkoutBtn} onPress={() => router.push('/cart' as any)}>
             <Text style={styles.checkoutText}>View Cart</Text>
             <Ionicons name="arrow-forward" size={18} color="#fff" />
           </TouchableOpacity>

@@ -37,7 +37,8 @@ export default function LoginScreen() {
       });
       const data = await res.json();
       if (res.ok) {
-        router.push({ pathname: '/otp', params: { phoneNumber, otp: data.otp } });
+        if (__DEV__) console.log('[DEV] OTP:', data.otp);
+        router.push({ pathname: '/otp', params: { phoneNumber } });
       } else {
         Alert.alert('Error', data.message || 'Failed to send OTP');
       }
