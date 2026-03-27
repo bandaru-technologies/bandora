@@ -107,6 +107,8 @@ export default function StoreListScreen() {
       onPress={() => {
         if (category === 'Doctor/Clinic') {
           router.push({ pathname: '/clinic/[storeId]', params: { storeId: item.id, storeName: item.name } });
+        } else if (category === 'Salon') {
+          router.push({ pathname: '/salon/[storeId]', params: { storeId: item.id, storeName: item.name } });
         } else {
           router.push({ pathname: '/store/[storeId]', params: { storeId: item.id, storeName: item.name } });
         }

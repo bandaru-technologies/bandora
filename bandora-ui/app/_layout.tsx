@@ -18,6 +18,7 @@ export default function RootLayout() {
           <Stack.Screen name="store/[storeId]" />
           <Stack.Screen name="clinic/[storeId]" />
           <Stack.Screen name="clinic/slots/[departmentId]" />
+          <Stack.Screen name="salon/[storeId]" />
         </Stack>
         <StatusBar style="auto" />
       </AuthProvider>
