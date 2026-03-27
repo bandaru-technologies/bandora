@@ -2,9 +2,9 @@ spring:
   application:
     name: bandora
   datasource:
-    url: jdbc:postgresql://${PGHOST:localhost}:${PGPORT:5432}/${PGDATABASE:bandora}
-    username: ${PGUSER:postgres}
-    password: ${PGPASSWORD:postgres}
+    url: ${SPRING_DATASOURCE_URL:${JDBC_DATABASE_URL:jdbc:postgresql://${PGHOST:localhost}:${PGPORT:5432}/${PGDATABASE:bandora}}}
+    username: ${SPRING_DATASOURCE_USERNAME:${PGUSER:postgres}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${PGPASSWORD:postgres}}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
