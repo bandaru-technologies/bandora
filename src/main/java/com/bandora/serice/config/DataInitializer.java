@@ -27,6 +27,7 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) {
         if (storeRepository.count() > 0) {
+            seedClinicsIfMissing();
             seedDepartmentsAndSlots();
             return;
         }
@@ -157,10 +158,43 @@ public class DataInitializer implements CommandLineRunner {
         seedDepartmentsAndSlots();
     }
 
+    private void seedClinicsIfMissing() {
+        boolean hasClinic = storeRepository.findAll().stream()
+                .anyMatch(s -> "Doctor/Clinic".equals(s.getCategory()));
+        if (hasClinic) return;
+
+        storeRepository.saveAll(List.of(
+                Store.builder().name("Vikram Hospital").category("Doctor/Clinic")
+                        .address("Millers Road, Bengaluru").latitude(12.9922).longitude(77.5869)
+                        .rating(4.3).reviewCount(890).open(true)
+                        .timing("8:00 AM - 8:00 PM").phone("+91 80 4150 1000").build(),
+                Store.builder().name("Manipal Hospital").category("Doctor/Clinic")
+                        .address("98, HAL Airport Road, Bengaluru").latitude(12.9592).longitude(77.6470)
+                        .rating(4.7).reviewCount(3240).open(true)
+                        .timing("24 Hours").phone("+91 80 2502 4444").build(),
+                Store.builder().name("Apollo Clinic").category("Doctor/Clinic")
+                        .address("Jayanagar 4th Block, Bengaluru").latitude(12.9304).longitude(77.5831)
+                        .rating(4.6).reviewCount(1870).open(true)
+                        .timing("8:00 AM - 10:00 PM").phone("+91 98765 10002").build(),
+                Store.builder().name("Fortis Healthcare").category("Doctor/Clinic")
+                        .address("Cunningham Road, Bengaluru").latitude(12.9932).longitude(77.5978)
+                        .rating(4.5).reviewCount(2100).open(true)
+                        .timing("24 Hours").phone("+91 80 6621 4444").build(),
+                Store.builder().name("Narayana Health City").category("Doctor/Clinic")
+                        .address("Bommasandra, Bengaluru").latitude(12.8392).longitude(77.6727)
+                        .rating(4.8).reviewCount(4100).open(true)
+                        .timing("24 Hours").phone("+91 80 7122 2200").build(),
+                Store.builder().name("Aster CMI Hospital").category("Doctor/Clinic")
+                        .address("NH-44, Hebbal, Bengaluru").latitude(13.0450).longitude(77.5920)
+                        .rating(4.5).reviewCount(1560).open(true)
+                        .timing("24 Hours").phone("+91 80 4342 0100").build()
+        ));
+    }
+
     private void seedDepartmentsAndSlots() {
         if (departmentRepository.count() > 0) return;
 
-        // Find Vikram Hospital (already in DB from previous seed)
+        // Find Vikram Hospital (seeded by seedClinicsIfMissing or fresh run)
         Store vikram = storeRepository.findAll().stream()
                 .filter(s -> "Vikram Hospital".equals(s.getName()))
                 .findFirst().orElse(null);
