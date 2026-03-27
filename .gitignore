@@ -36,3 +36,5 @@ build/
 bandora-ui/node_modules/
 bandora-ui/.expo/
 bandora-ui/dist/
+.env.local
+bandora-ui/.env.local
