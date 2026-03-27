@@ -27,7 +27,14 @@ export default function RootLayout() {
               <Stack.Screen name="payment" />
               <Stack.Screen name="delivery-assigned" />
               <Stack.Screen name="appointments" />
+              <Stack.Screen name="ask-question" />
+              <Stack.Screen name="question-sent" />
               <Stack.Screen name="booking-confirmed" />
+              <Stack.Screen name="vendor/onboard" />
+              <Stack.Screen name="vendor/services" />
+              <Stack.Screen name="vendor/slots" />
+              <Stack.Screen name="vendor/success" />
+              <Stack.Screen name="search" />
             </Stack>
             <StatusBar style="auto" />
           </AppointmentsProvider>

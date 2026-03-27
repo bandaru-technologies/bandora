@@ -40,15 +40,19 @@ export function AppointmentsProvider({ children }: { children: React.ReactNode }
       id: Math.random().toString(36).slice(2),
       bookedAt: new Date().toISOString(),
     };
-    const updated = [newEntry, ...appointments];
-    setAppointments(updated);
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    setAppointments(prev => {
+      const updated = [newEntry, ...prev];
+      AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const cancelAppointment = async (id: string) => {
-    const updated = appointments.filter(a => a.id !== id);
-    setAppointments(updated);
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    setAppointments(prev => {
+      const updated = prev.filter(a => a.id !== id);
+      AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      return updated;
+    });
   };
 
   return (

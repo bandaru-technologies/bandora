@@ -110,7 +110,7 @@ export default function StoreListScreen() {
         } else if (category === 'Salon') {
           router.push({ pathname: '/salon/[storeId]', params: { storeId: item.id, storeName: item.name } });
         } else {
-          router.push({ pathname: '/store/[storeId]', params: { storeId: item.id, storeName: item.name } });
+          router.push({ pathname: '/store/[storeId]', params: { storeId: item.id, storeName: item.name, category } });
         }
       }}
     >

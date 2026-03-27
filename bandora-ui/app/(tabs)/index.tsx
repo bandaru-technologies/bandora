@@ -164,6 +164,15 @@ export default function HomeScreen() {
             Welcome{user?.name ? `, ${user.name}` : ''}! 👋
           </Text>
           <Text style={styles.bannerSubtitle}>What are you looking for today?</Text>
+
+          <TouchableOpacity
+            style={styles.searchBar}
+            onPress={() => router.push('/search' as any)}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="search" size={18} color="#888" />
+            <Text style={styles.searchPlaceholder}>Search stores, services...</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Local Services */}
@@ -265,6 +274,13 @@ const styles = StyleSheet.create({
   },
   bannerGreeting: { color: '#fff', fontSize: 20, fontWeight: '700' },
   bannerSubtitle: { color: 'rgba(255,255,255,0.8)', fontSize: 13, marginTop: 4 },
+  searchBar: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: '#fff', borderRadius: 12,
+    paddingHorizontal: 14, paddingVertical: 12,
+    marginTop: 14,
+  },
+  searchPlaceholder: { fontSize: 14, color: '#999', flex: 1 },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',

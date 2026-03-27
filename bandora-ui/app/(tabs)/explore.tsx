@@ -3,6 +3,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
 
 export default function ProfileScreen() {
@@ -40,6 +41,19 @@ export default function ProfileScreen() {
             </TouchableOpacity>
           )}
         </View>
+
+        {/* List Your Business Banner */}
+        <TouchableOpacity
+          style={styles.listBizBanner}
+          onPress={() => router.push('/vendor/onboard' as any)}
+        >
+          <MaterialCommunityIcons name="store-plus-outline" size={24} color="#fff" />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.listBizTitle}>List Your Business on Bandora</Text>
+            <Text style={styles.listBizSub}>Salon, Clinic, Shop? Get discovered today</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.8)" />
+        </TouchableOpacity>
 
         {/* Menu */}
         <View style={styles.section}>
@@ -122,4 +136,10 @@ const styles = StyleSheet.create({
   },
   logoutText: { color: '#c0392b', fontWeight: '700', fontSize: 15 },
   version: { textAlign: 'center', fontSize: 12, color: '#bbb' },
+  listBizBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: 14,
+    backgroundColor: '#6A1B9A', borderRadius: 16, padding: 16,
+  },
+  listBizTitle: { color: '#fff', fontWeight: '700', fontSize: 15 },
+  listBizSub: { color: 'rgba(255,255,255,0.8)', fontSize: 12, marginTop: 2 },
 });

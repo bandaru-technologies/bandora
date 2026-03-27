@@ -43,7 +43,7 @@ const SUBCATEGORY_STYLE: Record<string, { bg: string; iconColor: string; icon: s
 const ALL_TAB = 'All';
 
 export default function StoreProductsScreen() {
-  const { storeId, storeName } = useLocalSearchParams<{ storeId: string; storeName: string }>();
+  const { storeId, storeName, category } = useLocalSearchParams<{ storeId: string; storeName: string; category?: string }>();
   const router = useRouter();
 
   const { cart: globalCart, addToCart: addToGlobalCart, removeFromCart: removeFromGlobalCart, totalItems, totalPrice } = useCart();
@@ -162,7 +162,7 @@ export default function StoreProductsScreen() {
         </TouchableOpacity>
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>{storeName}</Text>
-          <Text style={styles.headerSub}>Grocery Store</Text>
+          <Text style={styles.headerSub}>{category ?? 'Store'}</Text>
         </View>
         <TouchableOpacity style={styles.cartIconBtn} onPress={() => router.push('/cart' as any)}>
           <Ionicons name="cart-outline" size={24} color="#fff" />
@@ -173,6 +173,21 @@ export default function StoreProductsScreen() {
           )}
         </TouchableOpacity>
       </View>
+
+      {/* Ask a Question banner — Pharmacy only */}
+      {category === 'Pharmacy' && (
+        <TouchableOpacity
+          style={styles.askBanner}
+          onPress={() => router.push({ pathname: '/ask-question' as any, params: { storeId, storeName } })}
+        >
+          <Ionicons name="chatbubble-ellipses-outline" size={20} color="#C62828" />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.askBannerTitle}>Have a question about a medicine?</Text>
+            <Text style={styles.askBannerSub}>Ask the pharmacist directly</Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color="#C62828" />
+        </TouchableOpacity>
+      )}
 
       {/* Search */}
       <View style={styles.searchWrapper}>
@@ -279,6 +294,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   cartBadgeText: { color: '#fff', fontSize: 10, fontWeight: '700' },
+  askBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: '#FFF0F0', borderBottomWidth: 1, borderBottomColor: '#FFCDD2',
+    paddingHorizontal: 16, paddingVertical: 12,
+  },
+  askBannerTitle: { fontSize: 13, fontWeight: '700', color: '#C62828' },
+  askBannerSub: { fontSize: 11, color: '#e57373', marginTop: 1 },
   searchWrapper: {
     flexDirection: 'row',
     alignItems: 'center',

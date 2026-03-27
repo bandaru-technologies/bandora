@@ -80,4 +80,51 @@ public class ClinicController {
             return ResponseEntity.ok(Map.of("message", "Appointment cancelled"));
         }).orElse(ResponseEntity.notFound().build());
     }
+
+    @PostMapping("/{storeId}/departments")
+    public ResponseEntity<?> addDepartment(
+            @PathVariable Long storeId,
+            @RequestBody Map<String, Object> body) {
+        return storeRepository.findById(storeId).map(store -> {
+            Department dept = new Department();
+            dept.setStore(store);
+            dept.setName((String) body.get("name"));
+            dept.setDescription((String) body.get("description"));
+            dept.setDoctorName((String) body.get("doctorName"));
+            Object fee = body.get("consultationFee");
+            if (fee != null) {
+                dept.setConsultationFee(fee instanceof Number ? ((Number) fee).doubleValue() : Double.parseDouble(fee.toString()));
+            }
+            dept.setIcon((String) body.get("icon"));
+            Department saved = departmentRepository.save(dept);
+            return ResponseEntity.ok(Map.of(
+                    "id", saved.getId(),
+                    "name", saved.getName(),
+                    "message", "Service added"
+            ));
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/departments/{departmentId}/slots/bulk")
+    public ResponseEntity<?> addSlotsBulk(
+            @PathVariable Long departmentId,
+            @RequestBody List<Map<String, Object>> slots) {
+        return departmentRepository.findById(departmentId).map(dept -> {
+            List<AppointmentSlot> toSave = slots.stream().map(s -> {
+                AppointmentSlot slot = new AppointmentSlot();
+                slot.setDepartment(dept);
+                slot.setDate((String) s.get("date"));
+                slot.setTime((String) s.get("time"));
+                slot.setPeriod((String) s.get("period"));
+                Object avail = s.get("available");
+                slot.setAvailable(avail == null || Boolean.TRUE.equals(avail));
+                return slot;
+            }).toList();
+            slotRepository.saveAll(toSave);
+            return ResponseEntity.ok(Map.of(
+                    "count", toSave.size(),
+                    "message", toSave.size() + " slots added"
+            ));
+        }).orElse(ResponseEntity.notFound().build());
+    }
 }

@@ -23,6 +23,12 @@ public class StoreController {
         return storeRepository.findByCategoryIgnoreCase(category);
     }
 
+    @GetMapping("/search")
+    public List<Store> searchStores(@RequestParam String q) {
+        if (q == null || q.isBlank()) return List.of();
+        return storeRepository.findByNameContainingIgnoreCaseOrAddressContainingIgnoreCase(q, q);
+    }
+
     @PostMapping("/onboard")
     public ResponseEntity<?> onboardStore(@RequestBody OnboardStoreRequest request) {
         if (request.getName() == null || request.getName().isBlank()) {
