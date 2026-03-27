@@ -22,6 +22,7 @@ type CategoryItem = {
   iconLib: 'ion' | 'mci' | 'fa5';
   bg: string;
   iconColor: string;
+  comingSoon?: boolean;
 };
 
 const LOCAL_SERVICES: CategoryItem[] = [
@@ -39,7 +40,7 @@ const TRENDING_ITEMS: CategoryItem[] = [
   { id: 3, label: 'Appliances',  icon: 'tv-outline',             iconLib: 'ion', bg: '#FFF8E1', iconColor: '#F57F17' },
   { id: 4, label: 'Accessories', icon: 'watch-outline',          iconLib: 'ion', bg: '#FCE4EC', iconColor: '#AD1457' },
   { id: 5, label: 'Sports',      icon: 'football-outline',       iconLib: 'ion', bg: '#E8F5E9', iconColor: '#2E7D32' },
-  { id: 6, label: 'Toys',        icon: 'game-controller-outline',iconLib: 'ion', bg: '#FFF3E0', iconColor: '#BF360C' },
+  { id: 6, label: 'Toys',        icon: 'game-controller-outline',iconLib: 'ion', bg: '#FFF3E0', iconColor: '#BF360C', comingSoon: true },
 ];
 
 const NEARBY_STORES: CategoryItem[] = [
@@ -75,12 +76,16 @@ function CategoryGrid({ items, onPress }: { items: CategoryItem[]; onPress?: (it
         <TouchableOpacity
           key={item.id}
           style={styles.categoryCard}
-          onPress={() => onPress?.(item)}
+          onPress={() => !item.comingSoon && onPress?.(item)}
+          activeOpacity={item.comingSoon ? 1 : 0.7}
         >
-          <View style={[styles.categoryImageBox, { backgroundColor: item.bg }]}>
+          <View style={[styles.categoryImageBox, { backgroundColor: item.bg, opacity: item.comingSoon ? 0.5 : 1 }]}>
             <CategoryIcon icon={item.icon} iconLib={item.iconLib} iconColor={item.iconColor} />
           </View>
-          <Text style={styles.categoryLabel}>{item.label}</Text>
+          <Text style={[styles.categoryLabel, item.comingSoon && { color: '#aaa' }]}>{item.label}</Text>
+          {item.comingSoon && (
+            <Text style={styles.comingSoonBadge}>Coming Soon</Text>
+          )}
         </TouchableOpacity>
       ))}
     </View>
@@ -300,6 +305,17 @@ const styles = StyleSheet.create({
     color: '#333',
     textAlign: 'center',
     paddingHorizontal: 4,
+  },
+  comingSoonBadge: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#fff',
+    backgroundColor: '#FF7043',
+    borderRadius: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    marginTop: 3,
+    overflow: 'hidden',
   },
   dealsScroll: {
     paddingHorizontal: 16,
