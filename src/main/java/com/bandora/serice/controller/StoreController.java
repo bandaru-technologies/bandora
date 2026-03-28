@@ -7,6 +7,7 @@ import com.bandora.serice.entity.Store;
 import com.bandora.serice.repository.AppointmentSlotRepository;
 import com.bandora.serice.repository.DepartmentRepository;
 import com.bandora.serice.repository.StoreRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -35,6 +36,7 @@ public class StoreController {
         return storeRepository.findByNameContainingIgnoreCaseOrAddressContainingIgnoreCase(q, q);
     }
 
+    @Transactional
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteStore(@PathVariable Long id) {
         if (!storeRepository.existsById(id)) {
