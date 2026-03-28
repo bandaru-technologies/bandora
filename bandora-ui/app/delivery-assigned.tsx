@@ -14,10 +14,11 @@ const AGENTS = [
 ];
 
 export default function DeliveryAssignedScreen() {
-  const { total, storeName, itemCount } = useLocalSearchParams<{
+  const { total, storeName, itemCount, method } = useLocalSearchParams<{
     total: string;
     storeName: string;
     itemCount: string;
+    method: string;
   }>();
   const router = useRouter();
   const { clearCart } = useCart();
@@ -51,6 +52,37 @@ export default function DeliveryAssignedScreen() {
   }, [assigning]);
 
   const orderId = `BND${Date.now().toString().slice(-6)}`;
+
+  if (method === 'pickup') {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.assigningScreen}>
+          <View style={styles.pulseCircle}>
+            <MaterialCommunityIcons name="store-check-outline" size={48} color="#006491" />
+          </View>
+          <Text style={styles.assigningTitle}>Order Confirmed!</Text>
+          <Text style={styles.assigningSub}>Your item will be ready for pickup at the store in <Text style={{ fontWeight: '700', color: '#006491' }}>20 mins</Text>.</Text>
+          <View style={{ backgroundColor: '#fff', borderRadius: 14, padding: 16, width: '100%', gap: 10, marginTop: 12 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, justifyContent: 'space-between' }}>
+              <Text style={{ fontSize: 13, color: '#888' }}>Store</Text>
+              <Text style={{ fontSize: 13, fontWeight: '700', color: '#1a1a1a' }}>{storeName}</Text>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, justifyContent: 'space-between' }}>
+              <Text style={{ fontSize: 13, color: '#888' }}>Order ID</Text>
+              <Text style={{ fontSize: 13, fontWeight: '700', color: '#1a1a1a' }}>#{orderId}</Text>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, justifyContent: 'space-between' }}>
+              <Text style={{ fontSize: 13, color: '#888' }}>Total</Text>
+              <Text style={{ fontSize: 15, fontWeight: '800', color: '#006491' }}>₹{total}</Text>
+            </View>
+          </View>
+          <TouchableOpacity style={[styles.homeBtn, { width: '100%', marginTop: 8 }]} onPress={() => router.replace('/(tabs)')}>
+            <Text style={styles.homeBtnText}>Back to Home</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (assigning) {
     return (

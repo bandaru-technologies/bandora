@@ -28,7 +28,6 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) {
         if (storeRepository.count() > 0) {
             seedClinicsIfMissing();
-            seedSalonsIfMissing();
             seedDepartmentsAndSlots();
             return;
         }
@@ -156,7 +155,6 @@ public class DataInitializer implements CommandLineRunner {
                         .timing("24 Hours").phone("+91 80 4342 0100").build()
         ));
 
-        seedSalonsIfMissing();
         seedDepartmentsAndSlots();
     }
 

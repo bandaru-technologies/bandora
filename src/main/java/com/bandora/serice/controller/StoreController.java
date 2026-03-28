@@ -29,6 +29,15 @@ public class StoreController {
         return storeRepository.findByNameContainingIgnoreCaseOrAddressContainingIgnoreCase(q, q);
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteStore(@PathVariable Long id) {
+        if (!storeRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        storeRepository.deleteById(id);
+        return ResponseEntity.ok(Map.of("message", "Store deleted", "id", id));
+    }
+
     @PostMapping("/onboard")
     public ResponseEntity<?> onboardStore(@RequestBody OnboardStoreRequest request) {
         if (request.getName() == null || request.getName().isBlank()) {

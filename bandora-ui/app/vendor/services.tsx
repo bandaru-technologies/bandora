@@ -9,10 +9,21 @@ import { API_BASE } from '@/constants/api';
 
 const ACCENT = '#6A1B9A';
 
-const SALON_CHIPS = [
-  'Haircut', 'Hair Color', 'Facial', 'Manicure',
-  'Pedicure', 'Bridal Makeup', 'Head Spa', 'Massage',
-];
+const CATEGORY_CHIPS: Record<string, string[]> = {
+  Salon:       ['Haircut', 'Hair Color', 'Facial', 'Manicure', 'Pedicure', 'Bridal Makeup', 'Head Spa', 'Massage'],
+  Clinic:      ['General Consultation', 'Follow-up Visit', 'Blood Test', 'ECG', 'X-Ray', 'Vaccination', 'Physiotherapy'],
+  Pharmacy:    ['Prescription Pickup', 'OTC Medicines', 'Health Check', 'Blood Pressure Test', 'Blood Sugar Test', 'Home Delivery'],
+  Groceries:   ['Vegetables & Fruits', 'Dairy & Eggs', 'Bakery', 'Beverages', 'Snacks', 'Staples', 'Frozen Food', 'Personal Care'],
+  Electronics: ['Mobile Repair', 'Laptop Repair', 'Screen Replacement', 'Battery Replacement', 'Data Recovery', 'Smart TV Setup'],
+};
+
+const STAFF_LABEL: Record<string, string> = {
+  Salon:       'Stylist Name',
+  Clinic:      'Doctor Name',
+  Pharmacy:    'Pharmacist Name',
+  Groceries:   'Manager Name',
+  Electronics: 'Technician Name',
+};
 
 interface ServiceCard {
   id: string;
@@ -30,6 +41,9 @@ export default function ServicesScreen() {
 
   const [services, setServices] = useState<ServiceCard[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const chips = CATEGORY_CHIPS[category ?? ''] ?? CATEGORY_CHIPS['Salon'];
+  const staffLabel = STAFF_LABEL[category ?? ''] ?? 'Staff Name';
 
   const addFromChip = (chipName: string) => {
     if (services.find(s => s.name === chipName)) return;
@@ -117,7 +131,7 @@ export default function ServicesScreen() {
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <Text style={styles.sectionTitle}>Quick Add</Text>
         <View style={styles.chipsWrap}>
-          {SALON_CHIPS.map(chip => {
+          {chips.map(chip => {
             const active = activeChips.includes(chip);
             return (
               <TouchableOpacity
@@ -162,7 +176,7 @@ export default function ServicesScreen() {
                   placeholderTextColor="#aaa"
                 />
 
-                <Text style={styles.fieldLabel}>Stylist Name</Text>
+                <Text style={styles.fieldLabel}>{staffLabel}</Text>
                 <TextInput
                   style={styles.input}
                   value={svc.stylistName}

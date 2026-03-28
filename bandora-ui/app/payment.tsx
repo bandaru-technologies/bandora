@@ -6,7 +6,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
-type PaymentMethod = 'upi' | 'card' | 'netbanking' | 'cod';
+type PaymentMethod = 'upi' | 'card' | 'netbanking' | 'cod' | 'pickup';
 
 const UPI_APPS = [
   { id: 'gpay',    label: 'Google Pay',  icon: 'google',         color: '#4285F4' },
@@ -36,13 +36,14 @@ export default function PaymentScreen() {
       setProcessing(false);
       router.replace({
         pathname: '/delivery-assigned' as any,
-        params: { total, storeName, itemCount },
+        params: { total, storeName, itemCount, method },
       });
     }, 2000);
   };
 
   const canPay =
     method === 'cod' ||
+    method === 'pickup' ||
     method === 'netbanking' ||
     method === 'card' ||
     (method === 'upi' && (selectedUpi !== null || upiId.trim().length > 5));
@@ -196,6 +197,23 @@ export default function PaymentScreen() {
           </View>
         </TouchableOpacity>
 
+        {/* Pay at Store Pickup */}
+        <TouchableOpacity
+          style={[styles.methodRow, method === 'pickup' && styles.methodRowActive]}
+          onPress={() => setMethod('pickup')}
+          activeOpacity={0.8}
+        >
+          <View style={styles.methodLeft}>
+            <MaterialCommunityIcons name="store-outline" size={22} color={method === 'pickup' ? '#006491' : '#555'} />
+            <Text style={[styles.methodLabel, method === 'pickup' && styles.methodLabelActive]}>
+              Pay at Store Pickup
+            </Text>
+          </View>
+          <View style={[styles.radio, method === 'pickup' && styles.radioActive]}>
+            {method === 'pickup' && <View style={styles.radioDot} />}
+          </View>
+        </TouchableOpacity>
+
         <View style={{ height: 100 }} />
       </ScrollView>
 
@@ -212,7 +230,7 @@ export default function PaymentScreen() {
             <>
               <Ionicons name="lock-closed" size={16} color="#fff" />
               <Text style={styles.payBtnText}>
-                {method === 'cod' ? `Confirm Order · ₹${total}` : `Pay ₹${total}`}
+                {method === 'cod' || method === 'pickup' ? `Confirm Order · ₹${total}` : `Pay ₹${total}`}
               </Text>
             </>
           )}
