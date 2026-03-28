@@ -1,7 +1,11 @@
 package com.bandora.serice.controller;
 
 import com.bandora.serice.dto.OnboardStoreRequest;
+import com.bandora.serice.entity.AppointmentSlot;
+import com.bandora.serice.entity.Department;
 import com.bandora.serice.entity.Store;
+import com.bandora.serice.repository.AppointmentSlotRepository;
+import com.bandora.serice.repository.DepartmentRepository;
 import com.bandora.serice.repository.StoreRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +21,8 @@ import java.util.Map;
 public class StoreController {
 
     private final StoreRepository storeRepository;
+    private final DepartmentRepository departmentRepository;
+    private final AppointmentSlotRepository appointmentSlotRepository;
 
     @GetMapping
     public List<Store> getStores(@RequestParam String category) {
@@ -34,6 +40,11 @@ public class StoreController {
         if (!storeRepository.existsById(id)) {
             return ResponseEntity.notFound().build();
         }
+        List<Department> departments = departmentRepository.findByStoreId(id);
+        for (Department dept : departments) {
+            appointmentSlotRepository.deleteByDepartmentId(dept.getId());
+        }
+        departmentRepository.deleteAll(departments);
         storeRepository.deleteById(id);
         return ResponseEntity.ok(Map.of("message", "Store deleted", "id", id));
     }

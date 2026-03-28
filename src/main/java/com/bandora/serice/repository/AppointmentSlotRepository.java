@@ -8,4 +8,5 @@ import java.util.List;
 public interface AppointmentSlotRepository extends JpaRepository<AppointmentSlot, Long> {
     List<AppointmentSlot> findByDepartmentId(Long departmentId);
     List<AppointmentSlot> findByDepartmentIdAndDate(Long departmentId, String date);
+    void deleteByDepartmentId(Long departmentId);
 }
