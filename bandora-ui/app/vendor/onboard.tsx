@@ -101,10 +101,11 @@ export default function OnboardScreen() {
         <Text style={styles.label}>Phone</Text>
         <TextInput
           style={styles.input}
-          placeholder="+91 98765 43210"
+          placeholder="98765 43210"
           value={phone}
-          onChangeText={setPhone}
+          onChangeText={t => setPhone(t.replace(/\D/g, '').slice(0, 10))}
           keyboardType="phone-pad"
+          maxLength={10}
           placeholderTextColor="#aaa"
         />
 

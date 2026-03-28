@@ -93,14 +93,16 @@ function CategoryGrid({ items, onPress }: { items: CategoryItem[]; onPress?: (it
 }
 
 export default function HomeScreen() {
-  const [locationModalVisible, setLocationModalVisible] = useState(true);
+  const { coords, setCoords } = useLocation();
+  const [locationModalVisible, setLocationModalVisible] = useState(!coords);
   const [locationText, setLocationText] = useState('Set your delivery location');
   const [locationLoading, setLocationLoading] = useState(false);
+  const [profileMenuVisible, setProfileMenuVisible] = useState(false);
   const { user, logout } = useAuth();
-  const { setCoords } = useLocation();
   const router = useRouter();
 
   const handleLogout = () => {
+    setProfileMenuVisible(false);
     logout();
     router.replace('/login');
   };
@@ -152,7 +154,7 @@ export default function HomeScreen() {
           <Text style={styles.locationText} numberOfLines={1}>{locationText}</Text>
           <Ionicons name="chevron-down" size={14} color="#fff" />
         </TouchableOpacity>
-        <TouchableOpacity onPress={handleLogout}>
+        <TouchableOpacity onPress={() => setProfileMenuVisible(true)}>
           <Ionicons name="person-circle-outline" size={28} color="#fff" />
         </TouchableOpacity>
       </View>
@@ -215,6 +217,31 @@ export default function HomeScreen() {
           onPress={item => router.push({ pathname: '/stores/[category]', params: { category: item.label } })}
         />
       </ScrollView>
+
+      {/* Profile menu modal */}
+      <Modal
+        visible={profileMenuVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setProfileMenuVisible(false)}
+      >
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setProfileMenuVisible(false)}>
+          <View style={styles.profileMenu}>
+            <View style={styles.profileMenuHeader}>
+              <Ionicons name="person-circle-outline" size={40} color="#006491" />
+              <View>
+                <Text style={styles.profileMenuName}>{user?.name || 'User'}</Text>
+                <Text style={styles.profileMenuPhone}>{user?.phoneNumber || ''}</Text>
+              </View>
+            </View>
+            <View style={styles.profileMenuDivider} />
+            <TouchableOpacity style={styles.profileMenuItem} onPress={handleLogout}>
+              <Ionicons name="log-out-outline" size={20} color="#C62828" />
+              <Text style={[styles.profileMenuItemText, { color: '#C62828' }]}>Logout</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
 
       {/* Location permission modal */}
       <Modal
@@ -377,4 +404,16 @@ const styles = StyleSheet.create({
   askLaterText: { color: '#555', fontSize: 14, fontStyle: 'italic', textDecorationLine: 'underline' },
   allowBtn: { backgroundColor: '#c0392b', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 24 },
   allowBtnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  profileMenu: {
+    position: 'absolute', top: 60, right: 12,
+    backgroundColor: '#fff', borderRadius: 14, padding: 16, minWidth: 220,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15, shadowRadius: 12, elevation: 8,
+  },
+  profileMenuHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
+  profileMenuName: { fontSize: 15, fontWeight: '700', color: '#1a1a1a' },
+  profileMenuPhone: { fontSize: 12, color: '#888', marginTop: 2 },
+  profileMenuDivider: { height: 1, backgroundColor: '#f0f0f0', marginBottom: 10 },
+  profileMenuItem: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8 },
+  profileMenuItemText: { fontSize: 15, fontWeight: '600' },
 });

@@ -127,4 +127,30 @@ public class ClinicController {
             ));
         }).orElse(ResponseEntity.notFound().build());
     }
+
+    @PutMapping("/departments/{departmentId}/slots/bulk")
+    @jakarta.transaction.Transactional
+    public ResponseEntity<?> replaceSlotsBulk(
+            @PathVariable Long departmentId,
+            @RequestBody List<Map<String, Object>> slots) {
+        return departmentRepository.findById(departmentId).map(dept -> {
+            // Delete all existing slots for this department, then re-add
+            slotRepository.deleteByDepartmentId(departmentId);
+            List<AppointmentSlot> toSave = slots.stream().map(s -> {
+                AppointmentSlot slot = new AppointmentSlot();
+                slot.setDepartment(dept);
+                slot.setDate((String) s.get("date"));
+                slot.setTime((String) s.get("time"));
+                slot.setPeriod((String) s.get("period"));
+                Object avail = s.get("available");
+                slot.setAvailable(avail == null || Boolean.TRUE.equals(avail));
+                return slot;
+            }).toList();
+            slotRepository.saveAll(toSave);
+            return ResponseEntity.ok(Map.of(
+                    "count", toSave.size(),
+                    "message", toSave.size() + " slots updated"
+            ));
+        }).orElse(ResponseEntity.notFound().build());
+    }
 }

@@ -22,11 +22,16 @@ function getPeriod(time: string): string {
   return 'Evening';
 }
 
-function generateTimeSlots(): string[] {
+function generateTimeSlots(forDate?: string): string[] {
   const slots: string[] = [];
+  const now = new Date();
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const isToday = forDate === todayStr;
+
   for (let h = 9; h <= 20; h++) {
     for (const m of [0, 30]) {
       if (h === 20 && m === 30) break;
+      if (isToday && (h < now.getHours() || (h === now.getHours() && m <= now.getMinutes()))) continue;
       const period = h < 12 ? 'AM' : 'PM';
       const h12 = h > 12 ? h - 12 : h === 0 ? 12 : h;
       slots.push(`${h12}:${m === 0 ? '00' : '30'} ${period}`);
@@ -59,6 +64,8 @@ interface SlotState {
   selectedTimes: string[];
   saved: boolean;
   saving: boolean;
+  editing: boolean;
+  loadingExisting: boolean;
 }
 
 export default function SlotsScreen() {
@@ -75,13 +82,29 @@ export default function SlotsScreen() {
   const [slotStates, setSlotStates] = useState<Record<number, SlotState>>(() => {
     const init: Record<number, SlotState> = {};
     services.forEach(s => {
-      init[s.id] = { expanded: false, selectedDates: [], selectedTimes: [], saved: false, saving: false };
+      init[s.id] = { expanded: false, selectedDates: [], selectedTimes: [], saved: false, saving: false, editing: false, loadingExisting: false };
     });
     return init;
   });
 
   const days = useMemo(() => generateNext14Days(), []);
-  const timeSlots = useMemo(() => generateTimeSlots(), []);
+
+  // Returns available slots for a service — filters past times if today is among selected dates
+  const getTimeSlotsForService = (id: number) => {
+    const dates = slotStates[id]?.selectedDates ?? [];
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const hasToday = dates.includes(todayStr);
+    return generateTimeSlots(hasToday ? todayStr : undefined);
+  };
+
+  const selectAllTimes = (id: number, slots: string[]) => {
+    setSlotStates(prev => ({ ...prev, [id]: { ...prev[id], selectedTimes: slots } }));
+  };
+
+  const deselectAllTimes = (id: number) => {
+    setSlotStates(prev => ({ ...prev, [id]: { ...prev[id], selectedTimes: [] } }));
+  };
 
   const toggleExpand = (id: number) => {
     setSlotStates(prev => ({
@@ -106,6 +129,22 @@ export default function SlotsScreen() {
     });
   };
 
+  const startEditing = async (svc: ServiceInfo) => {
+    setSlotStates(prev => ({ ...prev, [svc.id]: { ...prev[svc.id], loadingExisting: true } }));
+    try {
+      const res = await fetch(`${API_BASE}/api/clinics/departments/${svc.id}/slots`);
+      const data: { date: string; time: string }[] = await res.json();
+      const dates = [...new Set(data.map(s => s.date))];
+      const times = [...new Set(data.map(s => s.time))];
+      setSlotStates(prev => ({
+        ...prev,
+        [svc.id]: { ...prev[svc.id], selectedDates: dates, selectedTimes: times, expanded: true, saved: false, editing: true, loadingExisting: false },
+      }));
+    } catch {
+      setSlotStates(prev => ({ ...prev, [svc.id]: { ...prev[svc.id], loadingExisting: false } }));
+    }
+  };
+
   const saveSlots = async (svc: ServiceInfo) => {
     const state = slotStates[svc.id];
     if (!state.selectedDates.length || !state.selectedTimes.length) {
@@ -120,15 +159,16 @@ export default function SlotsScreen() {
           payload.push({ date, time, period: getPeriod(time), available: true });
         });
       });
+      const method = state.editing ? 'PUT' : 'POST';
       const res = await fetch(`${API_BASE}/api/clinics/departments/${svc.id}/slots/bulk`, {
-        method: 'POST',
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error('Failed to save slots');
       setSlotStates(prev => ({
         ...prev,
-        [svc.id]: { ...prev[svc.id], saved: true, saving: false, expanded: false },
+        [svc.id]: { ...prev[svc.id], saved: true, saving: false, expanded: false, editing: false },
       }));
     } catch (e: any) {
       Alert.alert('Error', e.message ?? 'Something went wrong');
@@ -179,7 +219,19 @@ export default function SlotsScreen() {
                   )}
                 </View>
                 {state.saved ? (
-                  <Ionicons name="checkmark-circle" size={26} color="#27ae60" />
+                  <View style={styles.savedActions}>
+                    <Ionicons name="checkmark-circle" size={22} color="#27ae60" />
+                    <TouchableOpacity
+                      style={styles.editBtn}
+                      onPress={() => startEditing(svc)}
+                      disabled={state.loadingExisting}
+                    >
+                      {state.loadingExisting
+                        ? <ActivityIndicator size="small" color={ACCENT} />
+                        : <Text style={styles.editBtnText}>Edit</Text>
+                      }
+                    </TouchableOpacity>
+                  </View>
                 ) : (
                   <TouchableOpacity
                     style={styles.setSlotsBtn}
@@ -212,21 +264,41 @@ export default function SlotsScreen() {
                   </ScrollView>
 
                   {/* Time slots */}
-                  <Text style={[styles.subLabel, { marginTop: 14 }]}>Select Time Slots</Text>
-                  <View style={styles.timeGrid}>
-                    {timeSlots.map(t => {
-                      const sel = state.selectedTimes.includes(t);
-                      return (
-                        <TouchableOpacity
-                          key={t}
-                          style={[styles.timeChip, sel && { backgroundColor: ACCENT, borderColor: ACCENT }]}
-                          onPress={() => toggleTime(svc.id, t)}
-                        >
-                          <Text style={[styles.timeChipText, sel && { color: '#fff' }]}>{t}</Text>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
+                  {(() => {
+                    const availableSlots = getTimeSlotsForService(svc.id);
+                    const allSelected = availableSlots.length > 0 && availableSlots.every(t => state.selectedTimes.includes(t));
+                    return (
+                      <>
+                        <View style={styles.subLabelRow}>
+                          <Text style={[styles.subLabel, { marginTop: 14 }]}>Select Time Slots</Text>
+                          <TouchableOpacity
+                            onPress={() => allSelected ? deselectAllTimes(svc.id) : selectAllTimes(svc.id, availableSlots)}
+                            style={styles.selectAllBtn}
+                          >
+                            <Text style={styles.selectAllBtnText}>{allSelected ? 'Deselect All' : 'Select All Day'}</Text>
+                          </TouchableOpacity>
+                        </View>
+                        {availableSlots.length === 0 ? (
+                          <Text style={styles.noSlotsText}>No available slots for today. Select a future date.</Text>
+                        ) : (
+                          <View style={styles.timeGrid}>
+                            {availableSlots.map(t => {
+                              const sel = state.selectedTimes.includes(t);
+                              return (
+                                <TouchableOpacity
+                                  key={t}
+                                  style={[styles.timeChip, sel && { backgroundColor: ACCENT, borderColor: ACCENT }]}
+                                  onPress={() => toggleTime(svc.id, t)}
+                                >
+                                  <Text style={[styles.timeChipText, sel && { color: '#fff' }]}>{t}</Text>
+                                </TouchableOpacity>
+                              );
+                            })}
+                          </View>
+                        )}
+                      </>
+                    );
+                  })()}
 
                   <TouchableOpacity
                     style={styles.saveBtn}
@@ -236,7 +308,7 @@ export default function SlotsScreen() {
                     {state.saving ? (
                       <ActivityIndicator color="#fff" />
                     ) : (
-                      <Text style={styles.saveBtnText}>Save Slots for {svc.name}</Text>
+                      <Text style={styles.saveBtnText}>{state.editing ? 'Update Slots' : `Save Slots for ${svc.name}`}</Text>
                     )}
                   </TouchableOpacity>
                 </View>
@@ -291,8 +363,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14, paddingVertical: 8,
   },
   setSlotsBtnText: { color: '#fff', fontWeight: '600', fontSize: 13 },
+  savedActions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  editBtn: { borderWidth: 1.5, borderColor: ACCENT, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
+  editBtnText: { color: ACCENT, fontWeight: '600', fontSize: 13 },
   slotConfig: { marginTop: 14 },
   subLabel: { fontSize: 13, fontWeight: '600', color: '#444', marginBottom: 8 },
+  subLabelRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 14, marginBottom: 8 },
+  selectAllBtn: { backgroundColor: '#ede7f6', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 5 },
+  selectAllBtnText: { fontSize: 12, fontWeight: '700', color: ACCENT },
+  noSlotsText: { fontSize: 12, color: '#e57373', fontStyle: 'italic', marginBottom: 8 },
   daysScroll: { marginBottom: 4 },
   dayChip: {
     borderWidth: 1.5, borderColor: '#ddd', borderRadius: 20,
