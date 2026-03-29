@@ -15,7 +15,7 @@ const INFO_CARDS = [
 
 export default function SuccessScreen() {
   const router = useRouter();
-  const { storeName } = useLocalSearchParams<{ storeName: string }>();
+  const { storeName, storeId } = useLocalSearchParams<{ storeName: string; storeId: string }>();
   const name = storeName ? decodeURIComponent(storeName) : 'Your store';
 
   return (
@@ -45,10 +45,10 @@ export default function SuccessScreen() {
       <View style={styles.actions}>
         <TouchableOpacity
           style={styles.primaryBtn}
-          onPress={() => router.replace('/(tabs)' as any)}
+          onPress={() => router.replace((`/vendor/manage?storeId=${storeId}&storeName=${encodeURIComponent(name)}`) as any)}
         >
           <MaterialCommunityIcons name="store-outline" size={20} color="#fff" />
-          <Text style={styles.primaryBtnText}>View My Store</Text>
+          <Text style={styles.primaryBtnText}>Manage My Store</Text>
         </TouchableOpacity>
 
         <TouchableOpacity

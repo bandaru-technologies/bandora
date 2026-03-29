@@ -34,6 +34,7 @@ export default function RootLayout() {
               <Stack.Screen name="vendor/services" />
               <Stack.Screen name="vendor/slots" />
               <Stack.Screen name="vendor/success" />
+              <Stack.Screen name="vendor/manage" />
               <Stack.Screen name="search" />
             </Stack>
             <StatusBar style="auto" />
