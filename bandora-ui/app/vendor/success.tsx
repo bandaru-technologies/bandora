@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Alert,
+  View, Text, StyleSheet, TouchableOpacity, SafeAreaView,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -53,10 +53,10 @@ export default function SuccessScreen() {
 
         <TouchableOpacity
           style={styles.secondaryBtn}
-          onPress={() => Alert.alert('Share feature coming soon')}
+          onPress={() => router.replace('/(tabs)' as any)}
         >
-          <Ionicons name="share-social-outline" size={20} color={ACCENT} />
-          <Text style={styles.secondaryBtnText}>Share Store</Text>
+          <Ionicons name="home-outline" size={20} color="#fff" />
+          <Text style={styles.secondaryBtnText}>Back to Home</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
