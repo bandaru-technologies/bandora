@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useLocation } from '@/context/LocationContext';
 import { useRouter } from 'expo-router';
 import * as Location from 'expo-location';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type CategoryItem = {
   id: number;
@@ -98,8 +99,17 @@ export default function HomeScreen() {
   const [locationText, setLocationText] = useState('Set your delivery location');
   const [locationLoading, setLocationLoading] = useState(false);
   const [profileMenuVisible, setProfileMenuVisible] = useState(false);
+  const [myStore, setMyStore] = useState<{ storeId: string; storeName: string } | null>(null);
   const { user, logout } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    AsyncStorage.multiGet(['vendor_store_id', 'vendor_store_name']).then(pairs => {
+      const id = pairs[0][1];
+      const name = pairs[1][1];
+      if (id && name) setMyStore({ storeId: id, storeName: name });
+    });
+  }, [profileMenuVisible]); // re-check whenever menu opens
 
   const handleLogout = () => {
     setProfileMenuVisible(false);
@@ -234,6 +244,29 @@ export default function HomeScreen() {
                 <Text style={styles.profileMenuPhone}>{user?.phoneNumber || ''}</Text>
               </View>
             </View>
+            <View style={styles.profileMenuDivider} />
+            {myStore && (
+              <TouchableOpacity
+                style={styles.profileMenuItem}
+                onPress={() => {
+                  setProfileMenuVisible(false);
+                  router.push((`/vendor/manage?storeId=${myStore.storeId}&storeName=${encodeURIComponent(myStore.storeName)}`) as any);
+                }}
+              >
+                <Ionicons name="storefront-outline" size={20} color="#6A1B9A" />
+                <Text style={[styles.profileMenuItemText, { color: '#6A1B9A' }]}>My Store</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity
+              style={styles.profileMenuItem}
+              onPress={() => {
+                setProfileMenuVisible(false);
+                router.push('/vendor/onboard' as any);
+              }}
+            >
+              <Ionicons name="add-circle-outline" size={20} color="#006491" />
+              <Text style={[styles.profileMenuItemText, { color: '#006491' }]}>List Your Business</Text>
+            </TouchableOpacity>
             <View style={styles.profileMenuDivider} />
             <TouchableOpacity style={styles.profileMenuItem} onPress={handleLogout}>
               <Ionicons name="log-out-outline" size={20} color="#C62828" />

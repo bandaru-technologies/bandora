@@ -6,6 +6,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { API_BASE } from '@/constants/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ACCENT = '#6A1B9A';
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -326,7 +327,13 @@ export default function SlotsScreen() {
       <View style={styles.footer}>
         <TouchableOpacity
           style={[styles.liveBtn, !allSaved && styles.liveBtnDisabled]}
-          onPress={() => router.push((`/vendor/success?storeId=${storeId}&storeName=${encodeURIComponent(storeName ?? '')}`) as any)}
+          onPress={async () => {
+          await AsyncStorage.multiSet([
+            ['vendor_store_id', storeId ?? ''],
+            ['vendor_store_name', storeName ?? ''],
+          ]);
+          router.push((`/vendor/success?storeId=${storeId}&storeName=${encodeURIComponent(storeName ?? '')}`) as any);
+        }}
           disabled={!allSaved}
         >
           <Text style={styles.liveBtnText}>Go Live!</Text>
