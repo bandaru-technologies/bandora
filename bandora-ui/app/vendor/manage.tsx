@@ -6,6 +6,7 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { API_BASE } from '@/constants/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ACCENT = '#6A1B9A';
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -197,6 +198,7 @@ export default function ManageStoreScreen() {
             try {
               const res = await fetch(`${API_BASE}/api/stores/${storeId}`, { method: 'DELETE' });
               if (!res.ok) throw new Error('Failed to delete store');
+              await AsyncStorage.multiRemove(['vendor_store_id', 'vendor_store_name']);
               router.replace('/(tabs)' as any);
             } catch (e: any) {
               Alert.alert('Error', e.message ?? 'Something went wrong');
