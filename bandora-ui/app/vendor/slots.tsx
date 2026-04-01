@@ -21,6 +21,20 @@ function getPeriod(time: string): string {
   return 'Evening';
 }
 
+function isTimeFuture(date: string, time: string): boolean {
+  const now = new Date();
+  const today = now.toISOString().split('T')[0];
+  if (date > today) return true;
+  if (date < today) return false;
+  const [timePart, meridiem] = time.split(' ');
+  let [h, m] = timePart.split(':').map(Number);
+  if (meridiem === 'PM' && h !== 12) h += 12;
+  if (meridiem === 'AM' && h === 12) h = 0;
+  const slotTime = new Date();
+  slotTime.setHours(h, m, 0, 0);
+  return slotTime > now;
+}
+
 function generateTimeSlots(): string[] {
   const slots: string[] = [];
   for (let h = 9; h <= 20; h++) {
@@ -123,10 +137,10 @@ export default function SlotsScreen() {
     });
   };
 
-  const selectAllForDate = (id: number, date: string) => {
+  const selectAllForDate = (id: number, date: string, slots = timeSlots) => {
     setSlotStates(prev => ({
       ...prev,
-      [id]: { ...prev[id], slotsByDate: { ...prev[id].slotsByDate, [date]: [...timeSlots] } },
+      [id]: { ...prev[id], slotsByDate: { ...prev[id].slotsByDate, [date]: [...slots] } },
     }));
   };
 
@@ -219,7 +233,8 @@ export default function SlotsScreen() {
           const selectedDates = Object.keys(state.slotsByDate);
           const activeDate = state.activeDate;
           const activeSlots = activeDate ? (state.slotsByDate[activeDate] ?? []) : [];
-          const allSelected = activeDate ? timeSlots.every(t => activeSlots.includes(t)) : false;
+          const visibleTimeSlots = activeDate ? timeSlots.filter(t => isTimeFuture(activeDate, t)) : timeSlots;
+          const allSelected = activeDate ? visibleTimeSlots.every(t => activeSlots.includes(t)) : false;
 
           return (
             <View key={svc.id} style={[styles.serviceCard, state.saved && styles.serviceCardSaved]}>
@@ -283,7 +298,7 @@ export default function SlotsScreen() {
                         <View style={styles.datePanelActions}>
                           <TouchableOpacity
                             style={styles.selectAllBtn}
-                            onPress={() => allSelected ? deselectAllForDate(svc.id, activeDate) : selectAllForDate(svc.id, activeDate)}
+                            onPress={() => allSelected ? deselectAllForDate(svc.id, activeDate) : selectAllForDate(svc.id, activeDate, visibleTimeSlots)}
                           >
                             <Text style={styles.selectAllBtnText}>{allSelected ? 'Deselect All' : 'Select All Day'}</Text>
                           </TouchableOpacity>
@@ -293,7 +308,7 @@ export default function SlotsScreen() {
                         </View>
                       </View>
                       <View style={styles.timeGrid}>
-                        {timeSlots.map(t => {
+                        {visibleTimeSlots.map(t => {
                           const sel = activeSlots.includes(t);
                           return (
                             <TouchableOpacity
@@ -328,10 +343,13 @@ export default function SlotsScreen() {
         <TouchableOpacity
           style={[styles.liveBtn, !allSaved && styles.liveBtnDisabled]}
           onPress={async () => {
-          await AsyncStorage.multiSet([
-            ['vendor_store_id', storeId ?? ''],
-            ['vendor_store_name', storeName ?? ''],
-          ]);
+          const raw = await AsyncStorage.getItem('vendor_stores');
+          const existing: { storeId: string; storeName: string }[] = raw ? JSON.parse(raw) : [];
+          const already = existing.some(s => s.storeId === storeId);
+          if (!already) {
+            existing.push({ storeId: storeId ?? '', storeName: storeName ?? '' });
+            await AsyncStorage.setItem('vendor_stores', JSON.stringify(existing));
+          }
           router.push((`/vendor/success?storeId=${storeId}&storeName=${encodeURIComponent(storeName ?? '')}`) as any);
         }}
           disabled={!allSaved}

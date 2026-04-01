@@ -14,7 +14,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useLocation } from '@/context/LocationContext';
 import { useRouter } from 'expo-router';
 import * as Location from 'expo-location';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_BASE } from '@/constants/api';
 
 type CategoryItem = {
   id: number;
@@ -99,17 +99,22 @@ export default function HomeScreen() {
   const [locationText, setLocationText] = useState('Set your delivery location');
   const [locationLoading, setLocationLoading] = useState(false);
   const [profileMenuVisible, setProfileMenuVisible] = useState(false);
-  const [myStore, setMyStore] = useState<{ storeId: string; storeName: string } | null>(null);
+  const [activeCategories, setActiveCategories] = useState<Set<string>>(new Set());
   const { user, logout } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    AsyncStorage.multiGet(['vendor_store_id', 'vendor_store_name']).then(pairs => {
-      const id = pairs[0][1];
-      const name = pairs[1][1];
-      if (id && name) setMyStore({ storeId: id, storeName: name });
-    });
-  }, [profileMenuVisible]); // re-check whenever menu opens
+    fetch(`${API_BASE}/api/stores/active-categories`)
+      .then(r => r.json())
+      .then((cats: string[]) => setActiveCategories(new Set(cats.map(c => c.toLowerCase()))))
+      .catch(() => {});
+  }, []);
+
+  const withComingSoon = (items: CategoryItem[]): CategoryItem[] =>
+    items.map(item => ({
+      ...item,
+      comingSoon: item.comingSoon || (activeCategories.size > 0 && !activeCategories.has(item.label.toLowerCase())),
+    }));
 
   const handleLogout = () => {
     setProfileMenuVisible(false);
@@ -190,7 +195,7 @@ export default function HomeScreen() {
         {/* Local Services */}
         <Text style={styles.sectionTitle}>Local Services</Text>
         <CategoryGrid
-          items={LOCAL_SERVICES}
+          items={withComingSoon(LOCAL_SERVICES)}
           onPress={item => router.push({ pathname: '/stores/[category]', params: { category: item.label } })}
         />
 
@@ -212,7 +217,7 @@ export default function HomeScreen() {
         {/* Trending Near You */}
         <Text style={styles.sectionTitle}>Trending Near You</Text>
         <CategoryGrid
-          items={TRENDING_ITEMS}
+          items={withComingSoon(TRENDING_ITEMS)}
           onPress={item => router.push({ pathname: '/stores/[category]', params: { category: item.label } })}
         />
 
@@ -223,7 +228,7 @@ export default function HomeScreen() {
         {/* Schedule Appointment */}
         <Text style={styles.sectionTitle}>Schedule Appointment</Text>
         <CategoryGrid
-          items={APPOINTMENTS}
+          items={withComingSoon(APPOINTMENTS)}
           onPress={item => router.push({ pathname: '/stores/[category]', params: { category: item.label } })}
         />
       </ScrollView>
@@ -245,18 +250,6 @@ export default function HomeScreen() {
               </View>
             </View>
             <View style={styles.profileMenuDivider} />
-            {myStore && (
-              <TouchableOpacity
-                style={styles.profileMenuItem}
-                onPress={() => {
-                  setProfileMenuVisible(false);
-                  router.push((`/vendor/manage?storeId=${myStore.storeId}&storeName=${encodeURIComponent(myStore.storeName)}`) as any);
-                }}
-              >
-                <Ionicons name="storefront-outline" size={20} color="#6A1B9A" />
-                <Text style={[styles.profileMenuItemText, { color: '#6A1B9A' }]}>My Store</Text>
-              </TouchableOpacity>
-            )}
             <TouchableOpacity
               style={styles.profileMenuItem}
               onPress={() => {

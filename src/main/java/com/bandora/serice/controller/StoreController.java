@@ -25,6 +25,11 @@ public class StoreController {
     private final DepartmentRepository departmentRepository;
     private final AppointmentSlotRepository appointmentSlotRepository;
 
+    @GetMapping("/active-categories")
+    public List<String> getActiveCategories() {
+        return storeRepository.findDistinctCategories();
+    }
+
     @GetMapping
     public List<Store> getStores(@RequestParam String category) {
         return storeRepository.findByCategoryIgnoreCase(category);

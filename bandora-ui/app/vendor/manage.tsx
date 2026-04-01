@@ -21,6 +21,20 @@ function getPeriod(time: string): string {
   return 'Evening';
 }
 
+function isTimeFuture(date: string, time: string): boolean {
+  const now = new Date();
+  const today = now.toISOString().split('T')[0];
+  if (date > today) return true;
+  if (date < today) return false;
+  const [timePart, meridiem] = time.split(' ');
+  let [h, m] = timePart.split(':').map(Number);
+  if (meridiem === 'PM' && h !== 12) h += 12;
+  if (meridiem === 'AM' && h === 12) h = 0;
+  const slotTime = new Date();
+  slotTime.setHours(h, m, 0, 0);
+  return slotTime > now;
+}
+
 function generateTimeSlots(): string[] {
   const slots: string[] = [];
   for (let h = 9; h <= 20; h++) {
@@ -47,6 +61,11 @@ function generateNext14Days(): { label: string; value: string }[] {
   return days;
 }
 
+function formatFullDate(dateStr: string): string {
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' });
+}
+
 interface Department {
   id: number;
   name: string;
@@ -54,11 +73,18 @@ interface Department {
   consultationFee: number;
 }
 
+interface BookedSlot {
+  date: string;
+  time: string;
+  deptId: number;
+}
+
 interface SlotState {
   expanded: boolean;
   activeDate: string | null;
   slotsByDate: Record<string, string[]>;
   saving: boolean;
+  bookedSlots: BookedSlot[];
 }
 
 export default function ManageStoreScreen() {
@@ -83,7 +109,6 @@ export default function ManageStoreScreen() {
       const res = await fetch(`${API_BASE}/api/clinics/${storeId}/departments`);
       const data: Department[] = await res.json();
       setDepartments(data);
-      // Load existing slots for each department
       await Promise.all(data.map(dept => loadSlots(dept.id)));
     } catch {
       Alert.alert('Error', 'Could not load store services');
@@ -95,21 +120,23 @@ export default function ManageStoreScreen() {
   const loadSlots = async (deptId: number) => {
     try {
       const res = await fetch(`${API_BASE}/api/clinics/departments/${deptId}/slots`);
-      const data: { date: string; time: string }[] = await res.json();
+      const data: { date: string; time: string; available: boolean }[] = await res.json();
       const slotsByDate: Record<string, string[]> = {};
+      const bookedSlots: BookedSlot[] = [];
       data.forEach(s => {
         if (!slotsByDate[s.date]) slotsByDate[s.date] = [];
         slotsByDate[s.date].push(s.time);
+        if (!s.available) bookedSlots.push({ date: s.date, time: s.time, deptId });
       });
       const firstDate = Object.keys(slotsByDate)[0] ?? null;
       setSlotStates(prev => ({
         ...prev,
-        [deptId]: { expanded: false, activeDate: firstDate, slotsByDate, saving: false },
+        [deptId]: { expanded: false, activeDate: firstDate, slotsByDate, saving: false, bookedSlots },
       }));
     } catch {
       setSlotStates(prev => ({
         ...prev,
-        [deptId]: { expanded: false, activeDate: null, slotsByDate: {}, saving: false },
+        [deptId]: { expanded: false, activeDate: null, slotsByDate: {}, saving: false, bookedSlots: [] },
       }));
     }
   };
@@ -141,10 +168,10 @@ export default function ManageStoreScreen() {
     });
   };
 
-  const selectAllForDate = (id: number, date: string) => {
+  const selectAllForDate = (id: number, date: string, slots = timeSlots) => {
     setSlotStates(prev => ({
       ...prev,
-      [id]: { ...prev[id], slotsByDate: { ...prev[id].slotsByDate, [date]: [...timeSlots] } },
+      [id]: { ...prev[id], slotsByDate: { ...prev[id].slotsByDate, [date]: [...slots] } },
     }));
   };
 
@@ -198,7 +225,10 @@ export default function ManageStoreScreen() {
             try {
               const res = await fetch(`${API_BASE}/api/stores/${storeId}`, { method: 'DELETE' });
               if (!res.ok) throw new Error('Failed to delete store');
-              await AsyncStorage.multiRemove(['vendor_store_id', 'vendor_store_name']);
+              const raw = await AsyncStorage.getItem('vendor_stores');
+              const existing: { storeId: string; storeName: string }[] = raw ? JSON.parse(raw) : [];
+              const updated = existing.filter(s => s.storeId !== String(storeId));
+              await AsyncStorage.setItem('vendor_stores', JSON.stringify(updated));
               router.replace('/(tabs)' as any);
             } catch (e: any) {
               Alert.alert('Error', e.message ?? 'Something went wrong');
@@ -209,6 +239,35 @@ export default function ManageStoreScreen() {
       ]
     );
   };
+
+  // Aggregate all upcoming booked slots across departments
+  const upcomingBookings = useMemo(() => {
+    const all: { date: string; time: string; deptName: string; doctorName: string }[] = [];
+    departments.forEach(dept => {
+      const booked = slotStates[dept.id]?.bookedSlots ?? [];
+      booked.forEach(b => {
+        if (isTimeFuture(b.date, b.time)) {
+          all.push({ date: b.date, time: b.time, deptName: dept.name, doctorName: dept.doctorName });
+        }
+      });
+    });
+    // Sort by date then time
+    all.sort((a, b) => {
+      if (a.date !== b.date) return a.date.localeCompare(b.date);
+      return a.time.localeCompare(b.time);
+    });
+    // Group by date
+    const grouped: { date: string; items: typeof all }[] = [];
+    all.forEach(item => {
+      const last = grouped[grouped.length - 1];
+      if (last && last.date === item.date) {
+        last.items.push(item);
+      } else {
+        grouped.push({ date: item.date, items: [item] });
+      }
+    });
+    return grouped;
+  }, [departments, slotStates]);
 
   if (loading) {
     return (
@@ -240,6 +299,53 @@ export default function ManageStoreScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
+
+        {/* Upcoming Bookings */}
+        <View style={styles.bookingsCard}>
+          <View style={styles.bookingsHeader}>
+            <Ionicons name="calendar" size={18} color={ACCENT} />
+            <Text style={styles.bookingsTitle}>Upcoming Bookings</Text>
+            {upcomingBookings.length > 0 && (
+              <View style={styles.bookingsBadge}>
+                <Text style={styles.bookingsBadgeText}>
+                  {upcomingBookings.reduce((sum, g) => sum + g.items.length, 0)}
+                </Text>
+              </View>
+            )}
+          </View>
+
+          {upcomingBookings.length === 0 ? (
+            <View style={styles.noBookings}>
+              <Ionicons name="calendar-outline" size={36} color="#ddd" />
+              <Text style={styles.noBookingsText}>No upcoming bookings yet</Text>
+            </View>
+          ) : (
+            upcomingBookings.map(group => (
+              <View key={group.date} style={styles.bookingGroup}>
+                <Text style={styles.bookingDate}>{formatFullDate(group.date)}</Text>
+                {group.items.map((item, idx) => (
+                  <View key={idx} style={styles.bookingRow}>
+                    <View style={styles.bookingTimeBox}>
+                      <Ionicons name="time-outline" size={13} color={ACCENT} />
+                      <Text style={styles.bookingTime}>{item.time}</Text>
+                    </View>
+                    <View style={styles.bookingInfo}>
+                      <Text style={styles.bookingDept}>{item.deptName}</Text>
+                      {item.doctorName ? (
+                        <Text style={styles.bookingDoctor}>{item.doctorName}</Text>
+                      ) : null}
+                    </View>
+                    <View style={styles.bookedBadge}>
+                      <Text style={styles.bookedBadgeText}>Booked</Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            ))
+          )}
+        </View>
+
+        {/* Services & Slots */}
         <Text style={styles.sectionTitle}>Services & Slots</Text>
         <Text style={styles.sectionHint}>Tap a service to adjust its availability slots</Text>
 
@@ -248,11 +354,12 @@ export default function ManageStoreScreen() {
         )}
 
         {departments.map(dept => {
-          const state = slotStates[dept.id] ?? { expanded: false, activeDate: null, slotsByDate: {}, saving: false };
+          const state = slotStates[dept.id] ?? { expanded: false, activeDate: null, slotsByDate: {}, saving: false, bookedSlots: [] };
           const selectedDates = Object.keys(state.slotsByDate);
           const activeDate = state.activeDate;
           const activeSlots = activeDate ? (state.slotsByDate[activeDate] ?? []) : [];
-          const allSelected = activeDate ? timeSlots.every(t => activeSlots.includes(t)) : false;
+          const visibleTimeSlots = activeDate ? timeSlots.filter(t => isTimeFuture(activeDate, t)) : timeSlots;
+          const allSelected = activeDate ? visibleTimeSlots.every(t => activeSlots.includes(t)) : false;
           const totalSlots = selectedDates.reduce((acc, d) => acc + state.slotsByDate[d].length, 0);
 
           return (
@@ -277,7 +384,6 @@ export default function ManageStoreScreen() {
 
               {state.expanded && (
                 <View style={styles.slotConfig}>
-                  {/* Date tabs */}
                   <Text style={styles.subLabel}>Select Dates</Text>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.daysScroll}>
                     {days.map(day => {
@@ -298,7 +404,6 @@ export default function ManageStoreScreen() {
                     })}
                   </ScrollView>
 
-                  {/* Active date slot panel */}
                   {activeDate ? (
                     <View style={styles.datePanel}>
                       <View style={styles.datePanelHeader}>
@@ -308,7 +413,7 @@ export default function ManageStoreScreen() {
                         <View style={styles.datePanelActions}>
                           <TouchableOpacity
                             style={styles.selectAllBtn}
-                            onPress={() => allSelected ? deselectAllForDate(dept.id, activeDate) : selectAllForDate(dept.id, activeDate)}
+                            onPress={() => allSelected ? deselectAllForDate(dept.id, activeDate) : selectAllForDate(dept.id, activeDate, visibleTimeSlots)}
                           >
                             <Text style={styles.selectAllBtnText}>{allSelected ? 'Deselect All' : 'Select All Day'}</Text>
                           </TouchableOpacity>
@@ -318,7 +423,7 @@ export default function ManageStoreScreen() {
                         </View>
                       </View>
                       <View style={styles.timeGrid}>
-                        {timeSlots.map(t => {
+                        {visibleTimeSlots.map(t => {
                           const sel = activeSlots.includes(t);
                           return (
                             <TouchableOpacity
@@ -383,6 +488,47 @@ const styles = StyleSheet.create({
     padding: 8, alignItems: 'center', justifyContent: 'center',
   },
   content: { padding: 16, paddingBottom: 40 },
+  bookingsCard: {
+    backgroundColor: '#fff', borderRadius: 14,
+    borderWidth: 1, borderColor: '#e8d5f5',
+    marginBottom: 20, overflow: 'hidden',
+  },
+  bookingsHeader: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    padding: 14, borderBottomWidth: 1, borderBottomColor: '#f3e8fd',
+  },
+  bookingsTitle: { flex: 1, fontSize: 15, fontWeight: '700', color: '#1a1a1a' },
+  bookingsBadge: {
+    backgroundColor: ACCENT, borderRadius: 12,
+    paddingHorizontal: 8, paddingVertical: 2,
+  },
+  bookingsBadgeText: { color: '#fff', fontSize: 12, fontWeight: '700' },
+  noBookings: { alignItems: 'center', paddingVertical: 24, gap: 8 },
+  noBookingsText: { color: '#bbb', fontSize: 14 },
+  bookingGroup: { paddingHorizontal: 14, paddingBottom: 8 },
+  bookingDate: {
+    fontSize: 12, fontWeight: '700', color: ACCENT,
+    marginTop: 12, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5,
+  },
+  bookingRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: '#faf5ff', borderRadius: 10,
+    padding: 10, marginBottom: 6,
+  },
+  bookingTimeBox: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    backgroundColor: '#ede7f6', borderRadius: 8,
+    paddingHorizontal: 8, paddingVertical: 5,
+  },
+  bookingTime: { fontSize: 12, fontWeight: '700', color: ACCENT },
+  bookingInfo: { flex: 1 },
+  bookingDept: { fontSize: 13, fontWeight: '700', color: '#1a1a1a' },
+  bookingDoctor: { fontSize: 11, color: '#888', marginTop: 1 },
+  bookedBadge: {
+    backgroundColor: '#e8f5e9', borderRadius: 8,
+    paddingHorizontal: 8, paddingVertical: 4,
+  },
+  bookedBadgeText: { fontSize: 11, fontWeight: '700', color: '#2e7d32' },
   sectionTitle: { fontSize: 15, fontWeight: '700', color: '#1a1a1a', marginBottom: 4 },
   sectionHint: { fontSize: 12, color: '#888', marginBottom: 14 },
   emptyText: { fontSize: 14, color: '#aaa', textAlign: 'center', marginTop: 32 },
