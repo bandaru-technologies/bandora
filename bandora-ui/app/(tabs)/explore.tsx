@@ -27,8 +27,9 @@ export default function ProfileScreen() {
     }, [])
   );
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    setMyStores([]);
+    await logout();
     router.replace('/login');
   };
 
