@@ -8,7 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { API_BASE } from '@/constants/api';
 
 const ACCENT = '#6A1B9A';
-const CATEGORIES = ['Salon', 'Clinic', 'Pharmacy', 'Groceries', 'Electronics'];
+const CATEGORIES = ['Salon', 'Doctor/Clinic', 'Pharmacy', 'Groceries', 'Electronics'];
 
 export default function OnboardScreen() {
   const router = useRouter();

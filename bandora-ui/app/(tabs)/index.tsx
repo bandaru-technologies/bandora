@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-ico
 import { useAuth } from '@/context/AuthContext';
 import { useLocation } from '@/context/LocationContext';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import { API_BASE } from '@/constants/api';
 
@@ -100,20 +101,26 @@ export default function HomeScreen() {
   const [locationLoading, setLocationLoading] = useState(false);
   const [profileMenuVisible, setProfileMenuVisible] = useState(false);
   const [activeCategories, setActiveCategories] = useState<Set<string>>(new Set());
+  const [categoriesLoaded, setCategoriesLoaded] = useState(false);
   const { user, logout } = useAuth();
   const router = useRouter();
 
-  useEffect(() => {
-    fetch(`${API_BASE}/api/stores/active-categories`)
-      .then(r => r.json())
-      .then((cats: string[]) => setActiveCategories(new Set(cats.map(c => c.toLowerCase()))))
-      .catch(() => {});
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetch(`${API_BASE}/api/stores/active-categories?_=${Date.now()}`)
+        .then(r => r.json())
+        .then((cats: string[]) => {
+          setActiveCategories(new Set(cats.map(c => c.toLowerCase())));
+          setCategoriesLoaded(true);
+        })
+        .catch(() => {});
+    }, [])
+  );
 
   const withComingSoon = (items: CategoryItem[]): CategoryItem[] =>
     items.map(item => ({
       ...item,
-      comingSoon: item.comingSoon || (activeCategories.size > 0 && !activeCategories.has(item.label.toLowerCase())),
+      comingSoon: item.comingSoon || (categoriesLoaded && !activeCategories.has(item.label.toLowerCase())),
     }));
 
   const handleLogout = () => {
