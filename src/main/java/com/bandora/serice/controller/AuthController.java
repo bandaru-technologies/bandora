@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Map;
 import java.util.Random;
@@ -37,14 +36,12 @@ public class AuthController {
         otpStore.put(request.getPhoneNumber(), otp);
 
         try {
-            String url = UriComponentsBuilder
-                    .fromHttpUrl("https://www.fast2sms.com/dev/bulkV2")
-                    .queryParam("authorization", fast2smsApiKey)
-                    .queryParam("route", "otp")
-                    .queryParam("variables_values", otp)
-                    .queryParam("flash", "0")
-                    .queryParam("numbers", request.getPhoneNumber())
-                    .toUriString();
+            String url = "https://www.fast2sms.com/dev/bulkV2"
+                    + "?authorization=" + fast2smsApiKey
+                    + "&route=otp"
+                    + "&variables_values=" + otp
+                    + "&flash=0"
+                    + "&numbers=" + request.getPhoneNumber();
 
             restTemplate.getForObject(url, String.class);
         } catch (Exception e) {
