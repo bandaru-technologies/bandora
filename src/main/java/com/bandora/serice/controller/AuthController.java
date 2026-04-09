@@ -36,10 +36,12 @@ public class AuthController {
         otpStore.put(request.getPhoneNumber(), otp);
 
         try {
+            String message = "Your Bandora OTP is " + otp + ". Valid for 10 minutes. Do not share with anyone.";
             String url = "https://www.fast2sms.com/dev/bulkV2"
                     + "?authorization=" + fast2smsApiKey
-                    + "&route=otp"
-                    + "&variables_values=" + otp
+                    + "&route=q"
+                    + "&message=" + java.net.URLEncoder.encode(message, java.nio.charset.StandardCharsets.UTF_8)
+                    + "&language=english"
                     + "&flash=0"
                     + "&numbers=" + request.getPhoneNumber();
 
