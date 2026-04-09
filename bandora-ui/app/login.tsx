@@ -75,7 +75,7 @@ export default function LoginScreen() {
             <View style={styles.logoIcon}>
               <Text style={styles.logoIconText}>B</Text>
             </View>
-            <Text style={styles.logoText}>Bandora</Text>
+            <Text style={styles.logoText}>LocalVibe</Text>
           </View>
 
           {/* Headline */}

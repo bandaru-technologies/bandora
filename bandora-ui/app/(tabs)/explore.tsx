@@ -67,7 +67,7 @@ export default function ProfileScreen() {
         >
           <MaterialCommunityIcons name="store-plus-outline" size={24} color="#fff" />
           <View style={{ flex: 1 }}>
-            <Text style={styles.listBizTitle}>List Your Business on Bandora</Text>
+            <Text style={styles.listBizTitle}>List Your Business on LocalVibe</Text>
             <Text style={styles.listBizSub}>Salon, Clinic, Shop? Get discovered today</Text>
           </View>
           <Ionicons name="chevron-forward" size={18} color="rgba(255,255,255,0.8)" />
@@ -114,7 +114,7 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         )}
 
-        <Text style={styles.version}>Bandora v1.0.0</Text>
+        <Text style={styles.version}>LocalVibe v1.0.0</Text>
       </ScrollView>
     </SafeAreaView>
   );

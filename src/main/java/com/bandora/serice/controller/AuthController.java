@@ -36,7 +36,7 @@ public class AuthController {
         otpStore.put(request.getPhoneNumber(), otp);
 
         try {
-            String message = "Your Bandora OTP is " + otp + ". Valid for 10 minutes. Do not share with anyone.";
+            String message = "Your LocalVibe OTP is " + otp + ". Valid for 10 minutes. Do not share with anyone.";
             String url = "https://www.fast2sms.com/dev/bulkV2"
                     + "?authorization=" + fast2smsApiKey
                     + "&route=q"

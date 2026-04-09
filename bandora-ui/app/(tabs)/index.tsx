@@ -287,7 +287,7 @@ export default function HomeScreen() {
           <View style={styles.modalCard}>
             <Ionicons name="location" size={32} color="#1a7a5e" style={styles.modalIcon} />
             <Text style={styles.modalText}>
-              Allow <Text style={styles.modalBrand}>Bandora</Text> to access this{'\n'}
+              Allow <Text style={styles.modalBrand}>LocalVibe</Text> to access this{'\n'}
               device's location ?
             </Text>
             <View style={styles.modalActions}>

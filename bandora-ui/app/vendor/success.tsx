@@ -8,7 +8,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 const ACCENT = '#6A1B9A';
 
 const INFO_CARDS = [
-  { icon: 'search' as const, title: 'Customers can find you', sub: 'Your store is live on the Bandora marketplace' },
+  { icon: 'search' as const, title: 'Customers can find you', sub: 'Your store is live on the LocalVibe marketplace' },
   { icon: 'calendar-outline' as const, title: 'Manage bookings anytime', sub: 'Track all your appointments in one place' },
   { icon: 'notifications-outline' as const, title: 'Get notified on every booking', sub: 'Instant alerts for new appointments' },
 ];
@@ -24,7 +24,7 @@ export default function SuccessScreen() {
         <View style={styles.checkCircle}>
           <Ionicons name="checkmark" size={52} color="#fff" />
         </View>
-        <Text style={styles.heroTitle}>You're Live on Bandora! 🎉</Text>
+        <Text style={styles.heroTitle}>You're Live on LocalVibe! 🎉</Text>
         <Text style={styles.heroSub}>{name} is now visible to customers</Text>
       </View>
 

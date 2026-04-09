@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Bandora",
+    "name": "LocalVibe",
     "slug": "bandora",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -43,8 +43,8 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow Bandora to use your location to find stores near you.",
-          "locationWhenInUsePermission": "Allow Bandora to use your location to find stores near you."
+          "locationAlwaysAndWhenInUsePermission": "Allow LocalVibe to use your location to find stores near you.",
+          "locationWhenInUsePermission": "Allow LocalVibe to use your location to find stores near you."
         }
       ],
       [
