@@ -16,3 +16,6 @@ spring:
 
 server:
   port: ${PORT:8080}
+
+fast2sms:
+  api-key: ${FAST2SMS_API_KEY:}

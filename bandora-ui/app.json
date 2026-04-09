@@ -10,14 +10,14 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.bandoratechnologies.bandora",
-      "buildNumber": "1",
+      "bundleIdentifier": "com.bandarutechnologies.bandaru",
+      "buildNumber": "2",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
-      "package": "com.bandoratechnologies.bandora",
+      "package": "com.bandarutechnologies.bandaru",
       "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",

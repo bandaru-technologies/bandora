@@ -4,15 +4,19 @@ import com.bandora.serice.dto.*;
 import com.bandora.serice.entity.User;
 import com.bandora.serice.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Map;
-import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/auth")
 @CrossOrigin(origins = "*")
@@ -20,8 +24,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public class AuthController {
 
     private final UserRepository userRepository;
+    private final RestTemplate restTemplate;
 
-    // In-memory OTP store: phoneNumber -> otp
+    @Value("${fast2sms.api-key}")
+    private String fast2smsApiKey;
+
     private final ConcurrentHashMap<String, String> otpStore = new ConcurrentHashMap<>();
 
     @PostMapping("/send-otp")
@@ -29,11 +36,23 @@ public class AuthController {
         String otp = String.format("%06d", new Random().nextInt(999999));
         otpStore.put(request.getPhoneNumber(), otp);
 
-        // In production, send via SMS provider. For dev, return in response.
-        return ResponseEntity.ok(Map.of(
-                "message", "OTP sent successfully",
-                "otp", otp   // remove in production
-        ));
+        try {
+            String url = UriComponentsBuilder
+                    .fromHttpUrl("https://www.fast2sms.com/dev/bulkV2")
+                    .queryParam("authorization", fast2smsApiKey)
+                    .queryParam("route", "otp")
+                    .queryParam("variables_values", otp)
+                    .queryParam("flash", "0")
+                    .queryParam("numbers", request.getPhoneNumber())
+                    .toUriString();
+
+            restTemplate.getForObject(url, String.class);
+        } catch (Exception e) {
+            log.error("Failed to send OTP via Fast2SMS: {}", e.getMessage());
+            return ResponseEntity.status(500).body(Map.of("message", "Failed to send OTP. Please try again."));
+        }
+
+        return ResponseEntity.ok(Map.of("message", "OTP sent successfully"));
     }
 
     @PostMapping("/verify-otp")
@@ -44,7 +63,6 @@ public class AuthController {
         }
         otpStore.remove(request.getPhoneNumber());
 
-        // Auto-register if new user
         User user = userRepository.findByPhoneNumber(request.getPhoneNumber())
                 .orElseGet(() -> userRepository.save(
                         User.builder()

@@ -26,6 +26,17 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        // Remove any existing Salon stores
+        List<Store> salonStores = storeRepository.findByCategoryIgnoreCase("Salon");
+        for (Store salon : salonStores) {
+            List<Department> depts = departmentRepository.findByStoreId(salon.getId());
+            for (Department dept : depts) {
+                slotRepository.deleteByDepartmentId(dept.getId());
+            }
+            departmentRepository.deleteAll(depts);
+            storeRepository.delete(salon);
+        }
+
         if (storeRepository.count() > 0) {
             seedClinicsIfMissing();
             seedDepartmentsAndSlots();
@@ -156,106 +167,6 @@ public class DataInitializer implements CommandLineRunner {
         ));
 
         seedDepartmentsAndSlots();
-    }
-
-    private void seedSalonsIfMissing() {
-        boolean hasSalon = storeRepository.findAll().stream()
-                .anyMatch(s -> "Salon".equals(s.getCategory()));
-        if (hasSalon) return;
-
-        Store toniGuy = storeRepository.save(Store.builder().name("Toni & Guy").category("Salon")
-                .address("Indiranagar, Bengaluru").latitude(12.9784).longitude(77.6408)
-                .rating(4.6).reviewCount(1120).open(true)
-                .timing("10:00 AM - 8:00 PM").phone("+91 98765 20001").build());
-
-        Store lakme = storeRepository.save(Store.builder().name("Lakme Salon").category("Salon")
-                .address("Koramangala, Bengaluru").latitude(12.9352).longitude(77.6245)
-                .rating(4.4).reviewCount(890).open(true)
-                .timing("9:00 AM - 8:00 PM").phone("+91 98765 20002").build());
-
-        storeRepository.saveAll(List.of(
-                Store.builder().name("Naturals Salon").category("Salon")
-                        .address("Malleshwaram, Bengaluru").latitude(13.0035).longitude(77.5703)
-                        .rating(4.3).reviewCount(670).open(true)
-                        .timing("9:00 AM - 7:00 PM").phone("+91 98765 20003").build(),
-                Store.builder().name("Enrich Salon").category("Salon")
-                        .address("Whitefield, Bengaluru").latitude(12.9698).longitude(77.7499)
-                        .rating(4.2).reviewCount(540).open(false)
-                        .timing("10:00 AM - 8:00 PM").phone("+91 98765 20004").build()
-        ));
-
-        // Services for Toni & Guy
-        Department haircut = departmentRepository.save(Department.builder().store(toniGuy)
-                .name("Haircut").description("Styling cut for men & women")
-                .doctorName("Stylist Priya").consultationFee(500.0).icon("cut-outline").build());
-        Department hairColor = departmentRepository.save(Department.builder().store(toniGuy)
-                .name("Hair Color").description("Global, highlights & balayage")
-                .doctorName("Stylist Rahul").consultationFee(1500.0).icon("color-palette").build());
-        Department facial = departmentRepository.save(Department.builder().store(toniGuy)
-                .name("Facial").description("Deep cleansing & glow facial")
-                .doctorName("Stylist Neha").consultationFee(800.0).icon("sparkles").build());
-        Department manicure = departmentRepository.save(Department.builder().store(toniGuy)
-                .name("Manicure").description("Nail care & nail art")
-                .doctorName("Stylist Anita").consultationFee(400.0).icon("hand-left").build());
-
-        // Services for Lakme
-        Department lHaircut = departmentRepository.save(Department.builder().store(lakme)
-                .name("Haircut").description("Expert cut & blow dry")
-                .doctorName("Stylist Divya").consultationFee(600.0).icon("cut-outline").build());
-        Department lBridal = departmentRepository.save(Department.builder().store(lakme)
-                .name("Bridal Makeup").description("Complete bridal look")
-                .doctorName("Stylist Meera").consultationFee(8000.0).icon("rose").build());
-        Department lSpa = departmentRepository.save(Department.builder().store(lakme)
-                .name("Head Spa").description("Relaxing scalp massage & treatment")
-                .doctorName("Stylist Kavya").consultationFee(1200.0).icon("water").build());
-
-        // Slots for Toni & Guy Haircut
-        java.time.LocalDate today = java.time.LocalDate.now();
-        String[] dates = {today.toString(), today.plusDays(1).toString()};
-        String[][] slots = {
-                {"10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM", "12:00 PM"},
-                {"02:00 PM", "02:30 PM", "03:00 PM", "03:30 PM", "04:00 PM"},
-                {"05:00 PM", "05:30 PM", "06:00 PM", "06:30 PM"}
-        };
-        String[] periods = {"Morning", "Afternoon", "Evening"};
-        boolean[][] avail = {
-                {true, true, false, true, true},
-                {true, false, true, true, false},
-                {true, true, false, true}
-        };
-
-        List<AppointmentSlot> salonSlots = new ArrayList<>();
-        for (String date : dates) {
-            for (int p = 0; p < slots.length; p++) {
-                for (int t = 0; t < slots[p].length; t++) {
-                    salonSlots.add(AppointmentSlot.builder()
-                            .department(haircut).date(date)
-                            .time(slots[p][t]).period(periods[p])
-                            .available(avail[p][t % avail[p].length]).build());
-                }
-            }
-        }
-        // Slots for Hair Color (today only)
-        String[] colorSlots = {"10:00 AM", "11:30 AM", "02:00 PM", "04:00 PM", "06:00 PM"};
-        String[] colorPeriods = {"Morning", "Morning", "Afternoon", "Afternoon", "Evening"};
-        boolean[] colorAvail = {true, false, true, true, false};
-        for (int i = 0; i < colorSlots.length; i++) {
-            salonSlots.add(AppointmentSlot.builder()
-                    .department(hairColor).date(today.toString())
-                    .time(colorSlots[i]).period(colorPeriods[i]).available(colorAvail[i]).build());
-        }
-        // Slots for Lakme Haircut
-        for (String date : dates) {
-            for (int p = 0; p < slots.length; p++) {
-                for (int t = 0; t < slots[p].length; t++) {
-                    salonSlots.add(AppointmentSlot.builder()
-                            .department(lHaircut).date(date)
-                            .time(slots[p][t]).period(periods[p])
-                            .available(avail[p][t % avail[p].length]).build());
-                }
-            }
-        }
-        slotRepository.saveAll(salonSlots);
     }
 
     private void seedClinicsIfMissing() {
