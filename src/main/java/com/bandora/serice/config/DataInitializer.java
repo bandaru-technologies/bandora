@@ -11,6 +11,7 @@ import com.bandora.serice.repository.StoreRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +26,7 @@ public class DataInitializer implements CommandLineRunner {
     private final AppointmentSlotRepository slotRepository;
 
     @Override
+    @Transactional
     public void run(String... args) {
         // Remove any existing Salon stores
         List<Store> salonStores = storeRepository.findByCategoryIgnoreCase("Salon");
