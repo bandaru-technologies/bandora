@@ -27,6 +27,9 @@ public class AuthController {
     @Value("${spring.resend.api-key}")
     private String resendApiKey;
 
+    @Value("${spring.resend.from-email}")
+    private String resendFromEmail;
+
     private final ConcurrentHashMap<String, String> otpStore = new ConcurrentHashMap<>();
 
     @PostMapping("/send-otp")
@@ -41,7 +44,7 @@ public class AuthController {
                     .header("Authorization", "Bearer " + resendApiKey)
                     .header("Content-Type", "application/json")
                     .bodyValue(Map.of(
-                            "from", "LocalVibe <onboarding@resend.dev>",
+                            "from", "LocalVibe <" + resendFromEmail + ">",
                             "to", new String[]{ request.getEmail() },
                             "subject", "Your LocalVibe OTP",
                             "text", "Your LocalVibe OTP is: " + otp + "\n\nValid for 10 minutes. Do not share with anyone."

@@ -15,6 +15,7 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
   resend:
     api-key: ${RESEND_API_KEY:}
+    from-email: ${RESEND_FROM_EMAIL:onboarding@resend.dev}
 
 server:
   port: ${PORT:8080}
