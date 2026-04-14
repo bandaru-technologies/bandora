@@ -7,9 +7,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.Map;
 import java.util.Random;
@@ -24,10 +23,9 @@ import java.util.concurrent.ConcurrentHashMap;
 public class AuthController {
 
     private final UserRepository userRepository;
-    private final JavaMailSender mailSender;
 
-    @Value("${spring.mail.username}")
-    private String fromEmail;
+    @Value("${spring.resend.api-key}")
+    private String resendApiKey;
 
     private final ConcurrentHashMap<String, String> otpStore = new ConcurrentHashMap<>();
 
@@ -37,15 +35,26 @@ public class AuthController {
         otpStore.put(request.getEmail(), otp);
 
         try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(fromEmail);
-            message.setTo(request.getEmail());
-            message.setSubject("Your LocalVibe OTP");
-            message.setText("Your LocalVibe OTP is: " + otp + "\n\nValid for 10 minutes. Do not share with anyone.");
-            mailSender.send(message);
+            WebClient client = WebClient.create("https://api.resend.com");
+            client.post()
+                    .uri("/emails")
+                    .header("Authorization", "Bearer " + resendApiKey)
+                    .header("Content-Type", "application/json")
+                    .bodyValue(Map.of(
+                            "from", "LocalVibe <onboarding@resend.dev>",
+                            "to", new String[]{ request.getEmail() },
+                            "subject", "Your LocalVibe OTP",
+                            "text", "Your LocalVibe OTP is: " + otp + "\n\nValid for 10 minutes. Do not share with anyone."
+                    ))
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block();
         } catch (Exception e) {
-            log.error("Failed to send OTP email: {}", e.getMessage());
-            return ResponseEntity.status(500).body(Map.of("message", "Failed to send OTP. Please try again.", "detail", e.getMessage()));
+            log.error("Failed to send OTP email via Resend: {}", e.getMessage());
+            return ResponseEntity.status(500).body(Map.of(
+                    "message", "Failed to send OTP. Please try again.",
+                    "detail", e.getMessage()
+            ));
         }
 
         return ResponseEntity.ok(Map.of("message", "OTP sent to " + request.getEmail()));
