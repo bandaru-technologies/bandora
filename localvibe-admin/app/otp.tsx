@@ -1,24 +1,17 @@
 import { useState, useRef, useEffect } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
+  View, Text, TextInput, TouchableOpacity, StyleSheet,
+  ActivityIndicator, Alert, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
-
 import { API_BASE } from '@/constants/api';
-const API_URL = `${API_BASE}/api/auth`;
+
+const ACCENT = '#6A1B9A';
 const OTP_LENGTH = 6;
 
-export default function OtpScreen() {
+export default function AdminOtpScreen() {
   const { email } = useLocalSearchParams<{ email: string }>();
   const [digits, setDigits] = useState<string[]>(Array(OTP_LENGTH).fill(''));
   const [loading, setLoading] = useState(false);
@@ -37,9 +30,7 @@ export default function OtpScreen() {
     const next = [...digits];
     next[index] = value.slice(-1);
     setDigits(next);
-    if (value && index < OTP_LENGTH - 1) {
-      inputs.current[index + 1]?.focus();
-    }
+    if (value && index < OTP_LENGTH - 1) inputs.current[index + 1]?.focus();
   };
 
   const handleKeyPress = (e: any, index: number) => {
@@ -56,19 +47,15 @@ export default function OtpScreen() {
     }
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/verify-otp`, {
+      const res = await fetch(`${API_BASE}/api/auth/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, otp }),
       });
       const data = await res.json();
       if (res.ok) {
-        login(data.token, { name: data.name ?? '', email: data.email });
-        if (data.role === 'VENDOR' && data.storeId) {
-          router.replace((`/vendor/services?storeId=${data.storeId}&storeName=${encodeURIComponent(data.storeName ?? '')}&category=${encodeURIComponent(data.storeCategory ?? '')}&vendorMode=true`) as any);
-        } else {
-          router.replace('/(tabs)');
-        }
+        await login(data.token, { email: data.email, name: data.name ?? '' });
+        router.replace('/(tabs)');
       } else {
         Alert.alert('Invalid OTP', data.message || 'Please try again');
         setDigits(Array(OTP_LENGTH).fill(''));
@@ -85,7 +72,7 @@ export default function OtpScreen() {
     setResendTimer(30);
     setDigits(Array(OTP_LENGTH).fill(''));
     try {
-      await fetch(`${API_URL}/send-otp`, {
+      await fetch(`${API_BASE}/api/auth/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
@@ -104,17 +91,18 @@ export default function OtpScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={styles.card}>
-        {/* Back */}
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#006491" />
+          <Ionicons name="arrow-back" size={22} color={ACCENT} />
         </TouchableOpacity>
 
-        {/* Logo */}
         <View style={styles.logoRow}>
           <View style={styles.logoIcon}>
             <Text style={styles.logoIconText}>LV</Text>
           </View>
-          <Text style={styles.logoText}>LocalVibe</Text>
+          <View>
+            <Text style={styles.logoText}>LocalVibe</Text>
+            <Text style={styles.adminBadge}>Admin Portal</Text>
+          </View>
         </View>
 
         <Text style={styles.title}>Verify your email</Text>
@@ -123,7 +111,6 @@ export default function OtpScreen() {
           <Text style={styles.emailText}>{email}</Text>
         </Text>
 
-        {/* OTP boxes */}
         <View style={styles.otpRow}>
           {digits.map((d, i) => (
             <TextInput
@@ -140,7 +127,6 @@ export default function OtpScreen() {
           ))}
         </View>
 
-        {/* Resend */}
         <View style={styles.resendRow}>
           {resendTimer > 0 ? (
             <Text style={styles.resendTimer}>Resend OTP in {resendTimer}s</Text>
@@ -159,7 +145,7 @@ export default function OtpScreen() {
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.verifyBtnText}>Verify &amp; Login</Text>
+            <Text style={styles.verifyBtnText}>Verify &amp; Sign In</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -169,113 +155,44 @@ export default function OtpScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#EBEBEB',
-    justifyContent: 'center',
-    paddingHorizontal: 20,
+    flex: 1, backgroundColor: '#F3E5F5',
+    justifyContent: 'center', paddingHorizontal: 20,
   },
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+    backgroundColor: '#fff', borderRadius: 16, padding: 24,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08, shadowRadius: 8, elevation: 3,
   },
-  backBtn: {
-    marginBottom: 16,
-    alignSelf: 'flex-start',
-  },
-  logoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 24,
-    gap: 8,
-  },
+  backBtn: { marginBottom: 16, alignSelf: 'flex-start' },
+  logoRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 24 },
   logoIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: '#006491',
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 40, height: 40, borderRadius: 10,
+    backgroundColor: ACCENT, alignItems: 'center', justifyContent: 'center',
   },
-  logoIconText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '900',
+  logoIconText: { color: '#fff', fontSize: 14, fontWeight: '900' },
+  logoText: { fontSize: 20, fontWeight: '800', color: ACCENT },
+  adminBadge: {
+    fontSize: 10, fontWeight: '600', color: '#fff',
+    backgroundColor: ACCENT, borderRadius: 4,
+    paddingHorizontal: 6, paddingVertical: 2, alignSelf: 'flex-start', marginTop: 2,
   },
-  logoText: {
-    color: '#006491',
-    fontSize: 22,
-    fontWeight: '700',
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#1a1a1a',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 22,
-    marginBottom: 16,
-  },
-  emailText: {
-    fontWeight: '700',
-    color: '#1a1a1a',
-  },
-  otpRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginBottom: 20,
-    gap: 10,
-  },
+  title: { fontSize: 22, fontWeight: '700', color: '#1a1a1a', marginBottom: 8 },
+  subtitle: { fontSize: 14, color: '#666', lineHeight: 22, marginBottom: 24 },
+  emailText: { fontWeight: '700', color: '#1a1a1a' },
+  otpRow: { flexDirection: 'row', justifyContent: 'center', marginBottom: 20, gap: 10 },
   otpBox: {
-    width: 44,
-    height: 52,
-    borderWidth: 1.5,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    textAlign: 'center',
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1a1a1a',
+    width: 44, height: 52, borderWidth: 1.5, borderColor: '#ddd',
+    borderRadius: 8, textAlign: 'center', fontSize: 20,
+    fontWeight: '700', color: '#1a1a1a',
   },
-  otpBoxFilled: {
-    borderColor: '#006491',
-    backgroundColor: '#f0f7fb',
-  },
-  resendRow: {
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  resendTimer: {
-    fontSize: 13,
-    color: '#888',
-  },
-  resendLink: {
-    fontSize: 13,
-    color: '#006491',
-    fontWeight: '600',
-    textDecorationLine: 'underline',
-  },
+  otpBoxFilled: { borderColor: ACCENT, backgroundColor: '#F3E5F5' },
+  resendRow: { alignItems: 'center', marginBottom: 24 },
+  resendTimer: { fontSize: 13, color: '#888' },
+  resendLink: { fontSize: 13, color: ACCENT, fontWeight: '600', textDecorationLine: 'underline' },
   verifyBtn: {
-    backgroundColor: '#9E9E9E',
-    borderRadius: 4,
-    paddingVertical: 16,
-    alignItems: 'center',
+    backgroundColor: '#ccc', borderRadius: 10,
+    paddingVertical: 16, alignItems: 'center',
   },
-  verifyBtnActive: {
-    backgroundColor: '#006491',
-  },
-  verifyBtnText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-  },
+  verifyBtnActive: { backgroundColor: ACCENT },
+  verifyBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 });

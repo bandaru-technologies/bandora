@@ -35,8 +35,8 @@ interface ServiceCard {
 
 export default function ServicesScreen() {
   const router = useRouter();
-  const { storeId, storeName, category, vendorMode } = useLocalSearchParams<{
-    storeId: string; storeName: string; category: string; vendorMode: string;
+  const { storeId, storeName, category } = useLocalSearchParams<{
+    storeId: string; storeName: string; category: string;
   }>();
 
   const [services, setServices] = useState<ServiceCard[]>([]);
@@ -98,7 +98,7 @@ export default function ServicesScreen() {
         const data = await res.json();
         results.push({ id: data.id, name: data.name });
       }
-      router.push((`/vendor/slots?storeId=${storeId}&storeName=${encodeURIComponent(storeName ?? '')}&services=${encodeURIComponent(JSON.stringify(results))}&vendorMode=${vendorMode ?? 'false'}`) as any);
+      router.push((`/vendor/slots?storeId=${storeId}&storeName=${encodeURIComponent(storeName ?? '')}&services=${encodeURIComponent(JSON.stringify(results))}`) as any);
     } catch (e: any) {
       Alert.alert('Error', e.message ?? 'Something went wrong');
     } finally {

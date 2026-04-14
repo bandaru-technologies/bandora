@@ -25,4 +25,5 @@ public class Store {
     private boolean open;
     private String timing;
     private String phone;
+    private String vendorEmail;
 }

@@ -13,4 +13,6 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
 
     @Query("SELECT DISTINCT LOWER(s.category) FROM Store s")
     List<String> findDistinctCategories();
+
+    java.util.Optional<Store> findByVendorEmail(String vendorEmail);
 }

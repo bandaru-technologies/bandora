@@ -1,7 +1,9 @@
 package com.localvibe.serice.controller;
 
 import com.localvibe.serice.dto.*;
+import com.localvibe.serice.entity.Store;
 import com.localvibe.serice.entity.User;
+import com.localvibe.serice.repository.StoreRepository;
 import com.localvibe.serice.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class AuthController {
 
     private final UserRepository userRepository;
+    private final StoreRepository storeRepository;
 
     @Value("${spring.resend.api-key}")
     private String resendApiKey;
@@ -81,12 +84,25 @@ public class AuthController {
                                     .build()
                     ));
 
-            return ResponseEntity.ok(LoginResponse.builder()
+            // Check if this email belongs to a vendor store
+            java.util.Optional<Store> vendorStore = storeRepository.findByVendorEmail(request.getEmail());
+            LoginResponse.LoginResponseBuilder response = LoginResponse.builder()
                     .token(UUID.randomUUID().toString())
                     .name(user.getName())
                     .email(user.getEmail())
-                    .message("Login successful")
-                    .build());
+                    .message("Login successful");
+
+            if (vendorStore.isPresent()) {
+                Store store = vendorStore.get();
+                response.role("VENDOR")
+                        .storeId(store.getId())
+                        .storeName(store.getName())
+                        .storeCategory(store.getCategory());
+            } else {
+                response.role("CUSTOMER");
+            }
+
+            return ResponseEntity.ok(response.build());
         } catch (Exception e) {
             log.error("verify-otp failed: {}", e.getMessage(), e);
             return ResponseEntity.status(500).body(Map.of("message", "Verification failed", "detail", e.getMessage()));

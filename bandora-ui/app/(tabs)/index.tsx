@@ -257,17 +257,6 @@ export default function HomeScreen() {
               </View>
             </View>
             <View style={styles.profileMenuDivider} />
-            <TouchableOpacity
-              style={styles.profileMenuItem}
-              onPress={() => {
-                setProfileMenuVisible(false);
-                router.push('/vendor/onboard' as any);
-              }}
-            >
-              <Ionicons name="add-circle-outline" size={20} color="#006491" />
-              <Text style={[styles.profileMenuItemText, { color: '#006491' }]}>List Your Business</Text>
-            </TouchableOpacity>
-            <View style={styles.profileMenuDivider} />
             <TouchableOpacity style={styles.profileMenuItem} onPress={handleLogout}>
               <Ionicons name="log-out-outline" size={20} color="#C62828" />
               <Text style={[styles.profileMenuItemText, { color: '#C62828' }]}>Logout</Text>

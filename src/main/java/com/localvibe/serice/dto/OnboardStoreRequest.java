@@ -14,4 +14,5 @@ public class OnboardStoreRequest {
     private boolean open;
     private String timing;
     private String phone;
+    private String vendorEmail;
 }

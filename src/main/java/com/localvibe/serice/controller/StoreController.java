@@ -25,6 +25,11 @@ public class StoreController {
     private final DepartmentRepository departmentRepository;
     private final AppointmentSlotRepository appointmentSlotRepository;
 
+    @GetMapping("/all")
+    public List<Store> getAllStores() {
+        return storeRepository.findAll();
+    }
+
     @GetMapping("/active-categories")
     public List<String> getActiveCategories() {
         return storeRepository.findDistinctCategories();
@@ -56,6 +61,17 @@ public class StoreController {
         return ResponseEntity.ok(Map.of("message", "Store deleted", "id", id));
     }
 
+    @GetMapping("/by-vendor-email")
+    public ResponseEntity<?> getStoreByVendorEmail(@RequestParam String email) {
+        return storeRepository.findByVendorEmail(email)
+                .map(store -> ResponseEntity.ok(Map.of(
+                        "storeId", store.getId(),
+                        "storeName", store.getName(),
+                        "category", store.getCategory()
+                )))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @PostMapping("/onboard")
     public ResponseEntity<?> onboardStore(@RequestBody OnboardStoreRequest request) {
         if (request.getName() == null || request.getName().isBlank()) {
@@ -76,6 +92,7 @@ public class StoreController {
                 .open(request.isOpen())
                 .timing(request.getTiming())
                 .phone(request.getPhone())
+                .vendorEmail(request.getVendorEmail())
                 .build();
 
         Store saved = storeRepository.save(store);

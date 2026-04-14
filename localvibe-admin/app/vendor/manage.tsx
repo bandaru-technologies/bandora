@@ -89,8 +89,7 @@ interface SlotState {
 
 export default function ManageStoreScreen() {
   const router = useRouter();
-  const { storeId, storeName, vendorMode } = useLocalSearchParams<{ storeId: string; storeName: string; vendorMode: string }>();
-  const isVendorMode = vendorMode === 'true';
+  const { storeId, storeName } = useLocalSearchParams<{ storeId: string; storeName: string }>();
   const name = storeName ? decodeURIComponent(storeName) : 'Your Store';
 
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -454,8 +453,8 @@ export default function ManageStoreScreen() {
           );
         })}
 
-        {/* Delete store — hidden for vendor mode */}
-        {!isVendorMode && <View style={styles.dangerZone}>
+        {/* Delete store */}
+        <View style={styles.dangerZone}>
           <Text style={styles.dangerTitle}>Danger Zone</Text>
           <TouchableOpacity style={styles.deleteBtnLarge} onPress={handleDeleteStore} disabled={deleting}>
             {deleting
@@ -466,7 +465,7 @@ export default function ManageStoreScreen() {
                 </>
             }
           </TouchableOpacity>
-        </View>}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

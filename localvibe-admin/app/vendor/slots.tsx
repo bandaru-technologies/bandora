@@ -79,8 +79,8 @@ interface SlotState {
 
 export default function SlotsScreen() {
   const router = useRouter();
-  const { storeId, storeName, services: servicesParam, vendorMode } = useLocalSearchParams<{
-    storeId: string; storeName: string; services: string; vendorMode: string;
+  const { storeId, storeName, services: servicesParam } = useLocalSearchParams<{
+    storeId: string; storeName: string; services: string;
   }>();
 
   const services: ServiceInfo[] = useMemo(() => {
@@ -350,11 +350,7 @@ export default function SlotsScreen() {
             existing.push({ storeId: storeId ?? '', storeName: storeName ?? '' });
             await AsyncStorage.setItem('vendor_stores', JSON.stringify(existing));
           }
-          if (vendorMode === 'true') {
-            router.replace((`/vendor/manage?storeId=${storeId}&storeName=${encodeURIComponent(storeName ?? '')}&vendorMode=true`) as any);
-          } else {
-            router.push((`/vendor/success?storeId=${storeId}&storeName=${encodeURIComponent(storeName ?? '')}`) as any);
-          }
+          router.push((`/vendor/success?storeId=${storeId}&storeName=${encodeURIComponent(storeName ?? '')}`) as any);
         }}
           disabled={!allSaved}
         >
