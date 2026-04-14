@@ -65,26 +65,31 @@ public class AuthController {
 
     @PostMapping("/verify-otp")
     public ResponseEntity<?> verifyOtp(@RequestBody VerifyOtpRequest request) {
-        String stored = otpStore.get(request.getEmail());
-        if (stored == null || !stored.equals(request.getOtp())) {
-            return ResponseEntity.status(401).body(Map.of("message", "Invalid or expired OTP"));
+        try {
+            String stored = otpStore.get(request.getEmail());
+            if (stored == null || !stored.equals(request.getOtp())) {
+                return ResponseEntity.status(401).body(Map.of("message", "Invalid or expired OTP"));
+            }
+            otpStore.remove(request.getEmail());
+
+            User user = userRepository.findByEmail(request.getEmail())
+                    .orElseGet(() -> userRepository.save(
+                            User.builder()
+                                    .email(request.getEmail())
+                                    .password("")
+                                    .name("")
+                                    .build()
+                    ));
+
+            return ResponseEntity.ok(LoginResponse.builder()
+                    .token(UUID.randomUUID().toString())
+                    .name(user.getName())
+                    .email(user.getEmail())
+                    .message("Login successful")
+                    .build());
+        } catch (Exception e) {
+            log.error("verify-otp failed: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body(Map.of("message", "Verification failed", "detail", e.getMessage()));
         }
-        otpStore.remove(request.getEmail());
-
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseGet(() -> userRepository.save(
-                        User.builder()
-                                .email(request.getEmail())
-                                .password("")
-                                .name("")
-                                .build()
-                ));
-
-        return ResponseEntity.ok(LoginResponse.builder()
-                .token(UUID.randomUUID().toString())
-                .name(user.getName())
-                .email(user.getEmail())
-                .message("Login successful")
-                .build());
     }
 }
