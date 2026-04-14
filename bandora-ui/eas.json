@@ -16,7 +16,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_BASE": "https://bandora-production.up.railway.app"
+        "EXPO_PUBLIC_API_BASE": "https://lv-production.up.railway.app"
       }
     },
     "production": {
@@ -27,7 +27,7 @@
         "buildConfiguration": "Release"
       },
       "env": {
-        "EXPO_PUBLIC_API_BASE": "https://bandora-production.up.railway.app"
+        "EXPO_PUBLIC_API_BASE": "https://lv-production.up.railway.app"
       }
     }
   },
