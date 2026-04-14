@@ -19,7 +19,7 @@ const API_URL = `${API_BASE}/api/auth`;
 const OTP_LENGTH = 6;
 
 export default function OtpScreen() {
-  const { phoneNumber } = useLocalSearchParams<{ phoneNumber: string }>();
+  const { email } = useLocalSearchParams<{ email: string }>();
   const [digits, setDigits] = useState<string[]>(Array(OTP_LENGTH).fill(''));
   const [loading, setLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(30);
@@ -59,11 +59,11 @@ export default function OtpScreen() {
       const res = await fetch(`${API_URL}/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber, otp }),
+        body: JSON.stringify({ email, otp }),
       });
       const data = await res.json();
       if (res.ok) {
-        login(data.token, { name: data.name ?? '', phoneNumber: data.phoneNumber });
+        login(data.token, { name: data.name ?? '', email: data.email });
         router.replace('/(tabs)');
       } else {
         Alert.alert('Invalid OTP', data.message || 'Please try again');
@@ -84,9 +84,9 @@ export default function OtpScreen() {
       await fetch(`${API_URL}/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber }),
+        body: JSON.stringify({ email }),
       });
-      Alert.alert('OTP Sent', 'A new OTP has been sent to your number');
+      Alert.alert('OTP Sent', 'A new OTP has been sent to your email');
     } catch {
       Alert.alert('Error', 'Could not resend OTP');
     }
@@ -108,15 +108,15 @@ export default function OtpScreen() {
         {/* Logo */}
         <View style={styles.logoRow}>
           <View style={styles.logoIcon}>
-            <Text style={styles.logoIconText}>B</Text>
+            <Text style={styles.logoIconText}>LV</Text>
           </View>
           <Text style={styles.logoText}>LocalVibe</Text>
         </View>
 
-        <Text style={styles.title}>Verify your number</Text>
+        <Text style={styles.title}>Verify your email</Text>
         <Text style={styles.subtitle}>
           Enter the 6-digit OTP sent to{'\n'}
-          <Text style={styles.phone}>+91 {phoneNumber}</Text>
+          <Text style={styles.emailText}>{email}</Text>
         </Text>
 
         {/* OTP boxes */}
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginBottom: 16,
   },
-  phone: {
+  emailText: {
     fontWeight: '700',
     color: '#1a1a1a',
   },

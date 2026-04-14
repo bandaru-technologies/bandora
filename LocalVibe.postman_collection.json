@@ -1,0 +1,170 @@
+{
+  "info": {
+    "name": "LocalVibe API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://bandora-production.up.railway.app",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Send OTP",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/send-otp", "host": ["{{baseUrl}}"], "path": ["api", "auth", "send-otp"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"9876543210\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Verify OTP",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/verify-otp", "host": ["{{baseUrl}}"], "path": ["api", "auth", "verify-otp"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"9876543210\",\n  \"otp\": \"123456\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stores",
+      "item": [
+        {
+          "name": "Get Stores by Category - Groceries",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/stores?category=Groceries", "host": ["{{baseUrl}}"], "path": ["api", "stores"], "query": [{ "key": "category", "value": "Groceries" }] }
+          }
+        },
+        {
+          "name": "Get Stores by Category - Pharmacy",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/stores?category=Pharmacy", "host": ["{{baseUrl}}"], "path": ["api", "stores"], "query": [{ "key": "category", "value": "Pharmacy" }] }
+          }
+        },
+        {
+          "name": "Get Stores by Category - Electronics",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/stores?category=Electronics", "host": ["{{baseUrl}}"], "path": ["api", "stores"], "query": [{ "key": "category", "value": "Electronics" }] }
+          }
+        },
+        {
+          "name": "Get Stores by Category - Doctor/Clinic",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/stores?category=Doctor/Clinic", "host": ["{{baseUrl}}"], "path": ["api", "stores"], "query": [{ "key": "category", "value": "Doctor/Clinic" }] }
+          }
+        },
+        {
+          "name": "Get Stores by Category - Salon",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/stores?category=Salon", "host": ["{{baseUrl}}"], "path": ["api", "stores"], "query": [{ "key": "category", "value": "Salon" }] }
+          }
+        },
+        {
+          "name": "Onboard New Store",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/stores/onboard", "host": ["{{baseUrl}}"], "path": ["api", "stores", "onboard"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"My Store\",\n  \"category\": \"Groceries\",\n  \"address\": \"123 Main Street, Bengaluru\",\n  \"latitude\": 12.9716,\n  \"longitude\": 77.5946,\n  \"rating\": 4.2,\n  \"reviewCount\": 100,\n  \"open\": true,\n  \"timing\": \"9:00 AM - 9:00 PM\",\n  \"phone\": \"+91 98765 00099\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "Get All Products for Store",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/stores/1/products", "host": ["{{baseUrl}}"], "path": ["api", "stores", "1", "products"] }
+          }
+        },
+        {
+          "name": "Get Products by SubCategory",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/stores/1/products?subCategory=Dairy",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "stores", "1", "products"],
+              "query": [{ "key": "subCategory", "value": "Dairy" }]
+            }
+          }
+        },
+        {
+          "name": "Bulk Add Products",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/stores/1/products/bulk", "host": ["{{baseUrl}}"], "path": ["api", "stores", "1", "products", "bulk"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"storeId\": 1,\n  \"products\": [\n    {\n      \"name\": \"Product Name\",\n      \"description\": \"Product description\",\n      \"subCategory\": \"Snacks\",\n      \"price\": 50.0,\n      \"originalPrice\": 60.0,\n      \"unit\": \"100 g\",\n      \"inStock\": true,\n      \"stockCount\": 100\n    }\n  ]\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Clinics & Salons",
+      "item": [
+        {
+          "name": "Get Departments for Clinic",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/clinics/11/departments", "host": ["{{baseUrl}}"], "path": ["api", "clinics", "11", "departments"] }
+          }
+        },
+        {
+          "name": "Get Services for Salon",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/clinics/:storeId/departments", "host": ["{{baseUrl}}"], "path": ["api", "clinics", ":storeId", "departments"], "variable": [{ "key": "storeId", "value": "17" }] }
+          }
+        },
+        {
+          "name": "Get Slots for Department (all dates)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/clinics/departments/2/slots", "host": ["{{baseUrl}}"], "path": ["api", "clinics", "departments", "2", "slots"] }
+          }
+        },
+        {
+          "name": "Get Slots for Department (by date)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/clinics/departments/2/slots?date=2026-03-27",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "clinics", "departments", "2", "slots"],
+              "query": [{ "key": "date", "value": "2026-03-27" }]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

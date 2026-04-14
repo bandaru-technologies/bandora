@@ -18,14 +18,14 @@ import { API_BASE } from '@/constants/api';
 const API_URL = `${API_BASE}/api/auth`;
 
 export default function LoginScreen() {
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  const [phoneFocused, setPhoneFocused] = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
   const router = useRouter();
 
   const handleSendOtp = async () => {
-    if (phoneNumber.length < 10) {
-      Alert.alert('Error', 'Please enter a valid 10-digit mobile number');
+    if (!email.includes('@') || !email.includes('.')) {
+      Alert.alert('Error', 'Please enter a valid email address');
       return;
     }
     setLoading(true);
@@ -33,12 +33,11 @@ export default function LoginScreen() {
       const res = await fetch(`${API_URL}/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber }),
+        body: JSON.stringify({ email }),
       });
       const data = await res.json();
       if (res.ok) {
-        if (__DEV__) console.log('[DEV] OTP:', data.otp);
-        router.push({ pathname: '/otp', params: { phoneNumber } });
+        router.push({ pathname: '/otp', params: { email } });
       } else {
         Alert.alert('Error', data.message || 'Failed to send OTP');
       }
@@ -49,7 +48,7 @@ export default function LoginScreen() {
     }
   };
 
-  const isButtonActive = phoneNumber.length >= 10;
+  const isButtonActive = email.includes('@') && email.includes('.');
 
   return (
     <KeyboardAvoidingView
@@ -73,7 +72,7 @@ export default function LoginScreen() {
           {/* Logo */}
           <View style={styles.logoRow}>
             <View style={styles.logoIcon}>
-              <Text style={styles.logoIconText}>B</Text>
+              <Text style={styles.logoIconText}>LV</Text>
             </View>
             <Text style={styles.logoText}>LocalVibe</Text>
           </View>
@@ -99,25 +98,23 @@ export default function LoginScreen() {
 
           <View style={styles.divider} />
 
-          {/* Phone number input */}
-          <View style={[styles.inputWrapper, phoneFocused && styles.inputWrapperFocused]}>
-            <Text style={[styles.inputLabel, phoneFocused && styles.inputLabelFocused]}>
-              Mobile Number
+          {/* Email input */}
+          <View style={[styles.inputWrapper, emailFocused && styles.inputWrapperFocused]}>
+            <Text style={[styles.inputLabel, emailFocused && styles.inputLabelFocused]}>
+              Email Address
             </Text>
-            <View style={styles.phoneRow}>
-              <Text style={styles.countryCode}>+91</Text>
-              <View style={styles.phoneDivider} />
-              <TextInput
-                style={styles.phoneInput}
-                placeholder=""
-                keyboardType="phone-pad"
-                value={phoneNumber}
-                onChangeText={setPhoneNumber}
-                onFocus={() => setPhoneFocused(true)}
-                onBlur={() => setPhoneFocused(false)}
-                maxLength={10}
-              />
-            </View>
+            <TextInput
+              style={styles.emailInput}
+              placeholder="you@example.com"
+              placeholderTextColor="#bbb"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              value={email}
+              onChangeText={setEmail}
+              onFocus={() => setEmailFocused(true)}
+              onBlur={() => setEmailFocused(false)}
+            />
           </View>
         </View>
 
@@ -190,7 +187,7 @@ const styles = StyleSheet.create({
   },
   logoIconText: {
     color: '#fff',
-    fontSize: 20,
+    fontSize: 15,
     fontWeight: '900',
   },
   logoText: {
@@ -245,24 +242,7 @@ const styles = StyleSheet.create({
   inputLabelFocused: {
     color: '#006491',
   },
-  phoneRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  countryCode: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1a1a1a',
-    marginRight: 8,
-  },
-  phoneDivider: {
-    width: 1,
-    height: 20,
-    backgroundColor: '#ccc',
-    marginRight: 8,
-  },
-  phoneInput: {
-    flex: 1,
+  emailInput: {
     fontSize: 16,
     color: '#1a1a1a',
     padding: 0,

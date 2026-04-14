@@ -1,23 +1,23 @@
 {
   "expo": {
     "name": "LocalVibe",
-    "slug": "bandora",
+    "slug": "localvibe",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "bandora",
+    "scheme": "localvibe",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.bandarutechnologies.bandaru",
-      "buildNumber": "2",
+      "bundleIdentifier": "com.localvibe.app",
+      "buildNumber": "3",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
-      "package": "com.bandarutechnologies.bandaru",
+      "package": "com.localvibe.app",
       "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
