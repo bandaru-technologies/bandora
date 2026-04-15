@@ -75,13 +75,22 @@ export function AppointmentsProvider({ children }: { children: React.ReactNode }
     await fetchAppointments();
   };
 
-  const cancelAppointment = async (id: string) => {
+  const cancelAppointment = useCallback(async (id: string) => {
     const slotId = parseInt(id, 10);
+    // Optimistically remove from UI immediately so the user sees instant feedback
+    setAppointments(curr => curr.filter(a => a.id !== id));
     try {
-      await fetch(`${API_BASE}/api/clinics/slots/${slotId}/cancel`, { method: 'POST' });
-    } catch {}
-    await fetchAppointments();
-  };
+      const res = await fetch(`${API_BASE}/api/clinics/slots/${slotId}/cancel`, { method: 'POST' });
+      console.log('[Appointments] Cancel status:', res.status);
+      if (!res.ok) {
+        console.log('[Appointments] Cancel failed, restoring...');
+        await fetchAppointments();
+      }
+    } catch (e) {
+      console.error('[Appointments] Cancel error:', e);
+      await fetchAppointments();
+    }
+  }, [fetchAppointments]);
 
   return (
     <AppointmentsContext.Provider value={{

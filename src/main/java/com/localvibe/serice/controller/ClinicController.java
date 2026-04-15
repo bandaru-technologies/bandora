@@ -101,6 +101,7 @@ public class ClinicController {
     public ResponseEntity<?> cancelSlot(@PathVariable Long slotId) {
         return slotRepository.findById(slotId).map(slot -> {
             slot.setAvailable(true);
+            slot.setBookedByEmail(null);
             slotRepository.save(slot);
             return ResponseEntity.ok(Map.of("message", "Appointment cancelled"));
         }).orElse(ResponseEntity.notFound().build());
