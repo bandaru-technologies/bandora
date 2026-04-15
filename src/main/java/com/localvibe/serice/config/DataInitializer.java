@@ -28,6 +28,8 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
+        // Seeding disabled — stores are managed via admin portal
+        if (true) return;
         // Remove any existing Salon stores
         List<Store> salonStores = storeRepository.findByCategoryIgnoreCase("Salon");
         for (Store salon : salonStores) {
