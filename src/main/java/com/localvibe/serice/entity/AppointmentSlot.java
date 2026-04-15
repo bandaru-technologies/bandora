@@ -23,4 +23,5 @@ public class AppointmentSlot {
     private String time;
     private boolean available;
     private String period; // Morning / Afternoon / Evening
+    private String bookedByEmail;
 }

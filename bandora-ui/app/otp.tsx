@@ -63,12 +63,15 @@ export default function OtpScreen() {
       });
       const data = await res.json();
       if (res.ok) {
-        login(data.token, { name: data.name ?? '', email: data.email });
-        if (data.role === 'VENDOR' && data.storeId) {
-          router.replace((`/vendor/services?storeId=${data.storeId}&storeName=${encodeURIComponent(data.storeName ?? '')}&category=${encodeURIComponent(data.storeCategory ?? '')}&vendorMode=true`) as any);
-        } else {
-          router.replace('/(tabs)');
-        }
+        login(data.token, {
+          name: data.name ?? '',
+          email: data.email,
+          role: data.role,
+          storeId: data.storeId,
+          storeName: data.storeName,
+          storeCategory: data.storeCategory,
+        });
+        router.replace('/(tabs)');
       } else {
         Alert.alert('Invalid OTP', data.message || 'Please try again');
         setDigits(Array(OTP_LENGTH).fill(''));

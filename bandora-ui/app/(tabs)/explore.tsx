@@ -41,11 +41,32 @@ export default function ProfileScreen() {
           )}
         </View>
 
+        {/* Vendor: My Store */}
+        {user?.role === 'VENDOR' && user.storeId ? (
+          <View>
+            <Text style={styles.sectionLabel}>My Store</Text>
+            <TouchableOpacity
+              style={styles.myStoreCard}
+              onPress={() => {
+                const cat = user.storeCategory ?? '';
+                router.push(`/vendor/manage-slots?storeId=${user.storeId}&storeName=${encodeURIComponent(user.storeName ?? '')}&category=${encodeURIComponent(cat)}` as any);
+              }}
+            >
+              <View style={styles.myStoreIcon}>
+                <Ionicons name="storefront" size={24} color="#006491" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.myStoreName}>{user.storeName}</Text>
+                <Text style={styles.myStoreCat}>{user.storeCategory}</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={18} color="#ccc" />
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
         {/* Menu */}
         <View style={styles.section}>
-          <MenuItem icon="cart-outline" label="My Orders" onPress={() => {}} />
           <MenuItem icon="calendar-outline" label="My Appointments" onPress={() => router.push('/appointments' as any)} />
-          <MenuItem icon="location-outline" label="Saved Addresses" onPress={() => {}} />
         </View>
 
         <View style={styles.section}>
@@ -122,4 +143,20 @@ const styles = StyleSheet.create({
   },
   logoutText: { color: '#c0392b', fontWeight: '700', fontSize: 15 },
   version: { textAlign: 'center', fontSize: 12, color: '#bbb' },
+  sectionLabel: {
+    fontSize: 12, fontWeight: '700', color: '#888',
+    textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8,
+  },
+  myStoreCard: {
+    backgroundColor: '#fff', borderRadius: 14, padding: 16,
+    flexDirection: 'row', alignItems: 'center', gap: 14,
+    borderWidth: 1.5, borderColor: '#b3d9f0',
+    shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6, elevation: 2,
+  },
+  myStoreIcon: {
+    width: 48, height: 48, borderRadius: 12,
+    backgroundColor: '#E3F2FD', alignItems: 'center', justifyContent: 'center',
+  },
+  myStoreName: { fontSize: 15, fontWeight: '700', color: '#1a1a1a' },
+  myStoreCat: { fontSize: 12, color: '#006491', marginTop: 2 },
 });

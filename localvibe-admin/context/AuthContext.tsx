@@ -10,7 +10,7 @@ type AuthContextType = {
   token: string | null;
   user: AdminUser | null;
   login: (token: string, user: AdminUser) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
   isLoading: boolean;
 };
 

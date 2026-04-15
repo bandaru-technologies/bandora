@@ -8,7 +8,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/context/AuthContext';
 import { API_BASE } from '@/constants/api';
 
-const ACCENT = '#6A1B9A';
+const GREEN_DARK = '#1E3932';
+const GREEN = '#00704A';
 const OTP_LENGTH = 6;
 
 export default function AdminOtpScreen() {
@@ -90,27 +91,24 @@ export default function AdminOtpScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <View style={styles.card}>
+      {/* Dark green top area */}
+      <View style={styles.topArea}>
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color={ACCENT} />
+          <Ionicons name="arrow-back" size={22} color="#fff" />
         </TouchableOpacity>
-
-        <View style={styles.logoRow}>
-          <View style={styles.logoIcon}>
-            <Text style={styles.logoIconText}>LV</Text>
-          </View>
-          <View>
-            <Text style={styles.logoText}>LocalVibe</Text>
-            <Text style={styles.adminBadge}>Admin Portal</Text>
-          </View>
+        <View style={styles.iconWrap}>
+          <Ionicons name="mail" size={32} color="#fff" />
         </View>
-
-        <Text style={styles.title}>Verify your email</Text>
+        <Text style={styles.title}>Check your email</Text>
         <Text style={styles.subtitle}>
-          Enter the 6-digit OTP sent to{'\n'}
-          <Text style={styles.emailText}>{email}</Text>
+          We sent a 6-digit code to{'\n'}
+          <Text style={styles.emailHighlight}>{email}</Text>
         </Text>
+      </View>
 
+      {/* White card */}
+      <View style={styles.card}>
+        <Text style={styles.otpLabel}>ENTER OTP</Text>
         <View style={styles.otpRow}>
           {digits.map((d, i) => (
             <TextInput
@@ -129,7 +127,7 @@ export default function AdminOtpScreen() {
 
         <View style={styles.resendRow}>
           {resendTimer > 0 ? (
-            <Text style={styles.resendTimer}>Resend OTP in {resendTimer}s</Text>
+            <Text style={styles.resendTimer}>Resend code in <Text style={{ color: GREEN_DARK, fontWeight: '700' }}>{resendTimer}s</Text></Text>
           ) : (
             <TouchableOpacity onPress={handleResend}>
               <Text style={styles.resendLink}>Resend OTP</Text>
@@ -145,7 +143,7 @@ export default function AdminOtpScreen() {
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.verifyBtnText}>Verify &amp; Sign In</Text>
+            <Text style={styles.verifyBtnText}>Verify & Sign In</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -154,45 +152,42 @@ export default function AdminOtpScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1, backgroundColor: '#F3E5F5',
-    justifyContent: 'center', paddingHorizontal: 20,
+  container: { flex: 1, backgroundColor: GREEN_DARK },
+  topArea: {
+    paddingTop: 60, paddingBottom: 40, paddingHorizontal: 24,
   },
+  backBtn: { marginBottom: 28 },
+  iconWrap: {
+    width: 64, height: 64, borderRadius: 32,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center', justifyContent: 'center', marginBottom: 20,
+  },
+  title: { fontSize: 26, fontWeight: '800', color: '#fff', marginBottom: 10 },
+  subtitle: { fontSize: 14, color: 'rgba(255,255,255,0.7)', lineHeight: 22 },
+  emailHighlight: { color: '#D4E9E2', fontWeight: '700' },
   card: {
-    backgroundColor: '#fff', borderRadius: 16, padding: 24,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08, shadowRadius: 8, elevation: 3,
+    flex: 1, backgroundColor: '#fff',
+    borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    padding: 28,
   },
-  backBtn: { marginBottom: 16, alignSelf: 'flex-start' },
-  logoRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 24 },
-  logoIcon: {
-    width: 40, height: 40, borderRadius: 10,
-    backgroundColor: ACCENT, alignItems: 'center', justifyContent: 'center',
+  otpLabel: {
+    fontSize: 11, fontWeight: '700', color: '#888',
+    letterSpacing: 1.5, marginBottom: 20,
   },
-  logoIconText: { color: '#fff', fontSize: 14, fontWeight: '900' },
-  logoText: { fontSize: 20, fontWeight: '800', color: ACCENT },
-  adminBadge: {
-    fontSize: 10, fontWeight: '600', color: '#fff',
-    backgroundColor: ACCENT, borderRadius: 4,
-    paddingHorizontal: 6, paddingVertical: 2, alignSelf: 'flex-start', marginTop: 2,
-  },
-  title: { fontSize: 22, fontWeight: '700', color: '#1a1a1a', marginBottom: 8 },
-  subtitle: { fontSize: 14, color: '#666', lineHeight: 22, marginBottom: 24 },
-  emailText: { fontWeight: '700', color: '#1a1a1a' },
-  otpRow: { flexDirection: 'row', justifyContent: 'center', marginBottom: 20, gap: 10 },
+  otpRow: { flexDirection: 'row', justifyContent: 'center', gap: 10, marginBottom: 28 },
   otpBox: {
-    width: 44, height: 52, borderWidth: 1.5, borderColor: '#ddd',
-    borderRadius: 8, textAlign: 'center', fontSize: 20,
-    fontWeight: '700', color: '#1a1a1a',
+    width: 46, height: 56, borderWidth: 1.5, borderColor: '#ddd',
+    borderRadius: 10, textAlign: 'center', fontSize: 22,
+    fontWeight: '800', color: GREEN_DARK,
   },
-  otpBoxFilled: { borderColor: ACCENT, backgroundColor: '#F3E5F5' },
-  resendRow: { alignItems: 'center', marginBottom: 24 },
+  otpBoxFilled: { borderColor: GREEN, backgroundColor: '#F0F8F5' },
+  resendRow: { alignItems: 'center', marginBottom: 28 },
   resendTimer: { fontSize: 13, color: '#888' },
-  resendLink: { fontSize: 13, color: ACCENT, fontWeight: '600', textDecorationLine: 'underline' },
+  resendLink: { fontSize: 13, color: GREEN, fontWeight: '700', textDecorationLine: 'underline' },
   verifyBtn: {
-    backgroundColor: '#ccc', borderRadius: 10,
-    paddingVertical: 16, alignItems: 'center',
+    backgroundColor: '#d0d0d0', borderRadius: 12,
+    paddingVertical: 17, alignItems: 'center',
   },
-  verifyBtnActive: { backgroundColor: ACCENT },
+  verifyBtnActive: { backgroundColor: GREEN },
   verifyBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 });

@@ -7,6 +7,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { API_BASE } from '@/constants/api';
 import { useAppointments } from '@/context/AppointmentsContext';
+import { useAuth } from '@/context/AuthContext';
 
 type Slot = {
   id: number;
@@ -49,6 +50,7 @@ export default function SlotsScreen() {
   }>();
   const router = useRouter();
   const { addAppointment } = useAppointments();
+  const { user } = useAuth();
 
   const [slots, setSlots] = useState<Slot[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,7 +97,11 @@ export default function SlotsScreen() {
     if (!selectedSlot) return;
     setBooking(true);
     try {
-      const res = await fetch(`${API_BASE}/api/clinics/slots/${selectedSlot.id}/book`, { method: 'POST' });
+      const res = await fetch(`${API_BASE}/api/clinics/slots/${selectedSlot.id}/book`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: user?.email ?? '' }),
+      });
       const data = await res.json();
       if (res.ok) {
         setSlots(prev => prev.map(s => s.id === selectedSlot.id ? { ...s, available: false } : s));

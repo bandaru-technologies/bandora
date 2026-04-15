@@ -33,6 +33,7 @@ export default function RootLayout() {
               <Stack.Screen name="vendor/onboard" />
               <Stack.Screen name="vendor/services" />
               <Stack.Screen name="vendor/slots" />
+              <Stack.Screen name="vendor/manage-slots" />
               <Stack.Screen name="vendor/success" />
               <Stack.Screen name="vendor/manage" />
               <Stack.Screen name="search" />

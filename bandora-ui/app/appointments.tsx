@@ -1,10 +1,11 @@
 import {
-  View, Text, StyleSheet, FlatList, SafeAreaView, TouchableOpacity, Alert,
+  View, Text, StyleSheet, FlatList, SafeAreaView, TouchableOpacity, Alert, ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
+import { useCallback } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppointments, Appointment } from '@/context/AppointmentsContext';
-import { API_BASE } from '@/constants/api';
 
 function formatDate(dateStr: string) {
   const d = new Date(dateStr + 'T00:00:00');
@@ -25,8 +26,12 @@ function isPast(date: string, time: string) {
 }
 
 export default function AppointmentsScreen() {
-  const { appointments, cancelAppointment } = useAppointments();
+  const { appointments, loading, cancelAppointment, refreshAppointments } = useAppointments();
   const router = useRouter();
+
+  useFocusEffect(useCallback(() => {
+    refreshAppointments();
+  }, [refreshAppointments]));
 
   const upcoming = appointments.filter(a => !isPast(a.date, a.time));
   const past = appointments.filter(a => isPast(a.date, a.time));
@@ -41,9 +46,6 @@ export default function AppointmentsScreen() {
           text: 'Yes, Cancel',
           style: 'destructive',
           onPress: async () => {
-            try {
-              await fetch(`${API_BASE}/api/clinics/slots/${item.slotId}/cancel`, { method: 'POST' });
-            } catch {}
             await cancelAppointment(item.id);
           },
         },
@@ -115,7 +117,11 @@ export default function AppointmentsScreen() {
         <View style={{ width: 22 }} />
       </View>
 
-      {appointments.length === 0 ? (
+      {loading ? (
+        <View style={styles.empty}>
+          <ActivityIndicator size="large" color="#006491" />
+        </View>
+      ) : appointments.length === 0 ? (
         <View style={styles.empty}>
           <Ionicons name="calendar-outline" size={64} color="#ccc" />
           <Text style={styles.emptyTitle}>No appointments yet</Text>

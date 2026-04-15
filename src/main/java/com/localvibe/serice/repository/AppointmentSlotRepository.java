@@ -9,4 +9,5 @@ public interface AppointmentSlotRepository extends JpaRepository<AppointmentSlot
     List<AppointmentSlot> findByDepartmentId(Long departmentId);
     List<AppointmentSlot> findByDepartmentIdAndDate(Long departmentId, String date);
     void deleteByDepartmentId(Long departmentId);
+    List<AppointmentSlot> findByBookedByEmailAndAvailableFalse(String email);
 }

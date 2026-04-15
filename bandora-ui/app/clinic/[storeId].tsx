@@ -6,6 +6,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { API_BASE } from '@/constants/api';
+import { useAuth } from '@/context/AuthContext';
 
 type Department = {
   id: number;
@@ -28,6 +29,8 @@ const DEPT_STYLE: Record<string, { bg: string; iconColor: string; icon: string }
 export default function ClinicDepartmentsScreen() {
   const { storeId, storeName } = useLocalSearchParams<{ storeId: string; storeName: string }>();
   const router = useRouter();
+  const { user } = useAuth();
+  const isVendor = user?.role === 'VENDOR' && user?.storeId?.toString() === storeId;
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -81,6 +84,31 @@ export default function ClinicDepartmentsScreen() {
         </View>
         <View style={{ width: 22 }} />
       </View>
+
+      {isVendor && (
+        <View style={styles.vendorPanel}>
+          <Text style={styles.vendorPanelTitle}>Manage Your Store</Text>
+          <View style={styles.vendorMenu}>
+            <TouchableOpacity style={styles.vendorMenuItem} onPress={() => router.push(`/vendor/manage-slots?storeId=${storeId}&storeName=${encodeURIComponent(storeName ?? '')}&category=Doctor%2FClinic` as any)}>
+              <Ionicons name="construct-outline" size={22} color="#006491" />
+              <Text style={styles.vendorMenuLabel}>Manage Services</Text>
+              <Ionicons name="chevron-forward" size={18} color="#ccc" />
+            </TouchableOpacity>
+            <View style={styles.menuDivider} />
+            <TouchableOpacity style={styles.vendorMenuItem} onPress={() => router.push(`/vendor/manage-slots?storeId=${storeId}&storeName=${encodeURIComponent(storeName ?? '')}&category=Doctor%2FClinic` as any)}>
+              <Ionicons name="time-outline" size={22} color="#006491" />
+              <Text style={styles.vendorMenuLabel}>Manage Appointment Slots</Text>
+              <Ionicons name="chevron-forward" size={18} color="#ccc" />
+            </TouchableOpacity>
+            <View style={styles.menuDivider} />
+            <TouchableOpacity style={styles.vendorMenuItem} onPress={() => router.push(`/vendor/manage?storeId=${storeId}&storeName=${encodeURIComponent(storeName ?? '')}&vendorMode=true` as any)}>
+              <Ionicons name="calendar-outline" size={22} color="#006491" />
+              <Text style={styles.vendorMenuLabel}>View Bookings</Text>
+              <Ionicons name="chevron-forward" size={18} color="#ccc" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
 
       {loading ? (
         <View style={styles.center}>
@@ -142,4 +170,10 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
   loadingText: { color: '#888', fontSize: 14 },
   emptyText: { color: '#aaa', fontSize: 15 },
+  vendorPanel: { marginBottom: 16 },
+  vendorPanelTitle: { fontSize: 12, fontWeight: '700', color: '#888', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 },
+  vendorMenu: { backgroundColor: '#fff', borderRadius: 14, overflow: 'hidden', shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 6, elevation: 2 },
+  vendorMenuItem: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 16, paddingVertical: 14 },
+  vendorMenuLabel: { flex: 1, fontSize: 14, fontWeight: '500', color: '#1a1a1a' },
+  menuDivider: { height: 1, backgroundColor: '#f0f0f0', marginLeft: 52 },
 });

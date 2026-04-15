@@ -7,7 +7,11 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { API_BASE } from '@/constants/api';
 
-const ACCENT = '#6A1B9A';
+const GREEN_DARK = '#1E3932';
+const GREEN = '#00704A';
+const CREAM = '#F2F0EB';
+const MINT = '#D4E9E2';
+
 const CATEGORIES = ['Salon', 'Doctor/Clinic', 'Pharmacy', 'Groceries', 'Electronics'];
 
 export default function OnboardScreen() {
@@ -35,7 +39,6 @@ export default function OnboardScreen() {
         body: JSON.stringify({ name, category, address, phone, opensAt, closesAt, isOpen, vendorEmail }),
       });
       if (!res.ok) throw new Error('Failed to create store');
-      const data = await res.json();
       router.replace((`/vendor/success?storeName=${encodeURIComponent(name)}&vendorEmail=${encodeURIComponent(vendorEmail)}`) as any);
     } catch (e: any) {
       Alert.alert('Error', e.message ?? 'Something went wrong');
@@ -49,20 +52,16 @@ export default function OnboardScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={22} color="#1a1a1a" />
+          <Ionicons name="arrow-back" size={22} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>List Your Business</Text>
-      </View>
-
-      {/* Step indicator */}
-      <View style={styles.stepRow}>
-        <View style={[styles.stepDot, { backgroundColor: ACCENT }]} />
-        <Text style={styles.stepLabel}>Store Details</Text>
+        <View>
+          <Text style={styles.headerTitle}>List a Business</Text>
+          <Text style={styles.headerSub}>Fill in the store details below</Text>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text style={styles.sectionTitle}>Store Information</Text>
-
+        {/* Store name */}
         <Text style={styles.label}>Store Name</Text>
         <TextInput
           style={styles.input}
@@ -72,19 +71,21 @@ export default function OnboardScreen() {
           placeholderTextColor="#aaa"
         />
 
+        {/* Category */}
         <Text style={styles.label}>Category</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsScroll}>
           {CATEGORIES.map(cat => (
             <TouchableOpacity
               key={cat}
-              style={[styles.chip, category === cat && { backgroundColor: ACCENT, borderColor: ACCENT }]}
+              style={[styles.chip, category === cat && styles.chipActive]}
               onPress={() => setCategory(cat)}
             >
-              <Text style={[styles.chipText, category === cat && { color: '#fff' }]}>{cat}</Text>
+              <Text style={[styles.chipText, category === cat && styles.chipTextActive]}>{cat}</Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
 
+        {/* Address */}
         <Text style={styles.label}>Address</Text>
         <TextInput
           style={[styles.input, styles.multilineInput]}
@@ -96,6 +97,7 @@ export default function OnboardScreen() {
           placeholderTextColor="#aaa"
         />
 
+        {/* Phone */}
         <Text style={styles.label}>Phone</Text>
         <TextInput
           style={styles.input}
@@ -107,6 +109,7 @@ export default function OnboardScreen() {
           placeholderTextColor="#aaa"
         />
 
+        {/* Vendor Email */}
         <Text style={styles.label}>Vendor Email</Text>
         <TextInput
           style={styles.input}
@@ -117,9 +120,13 @@ export default function OnboardScreen() {
           autoCapitalize="none"
           placeholderTextColor="#aaa"
         />
-        <Text style={styles.vendorHint}>The vendor will login with this email to manage services & slots</Text>
+        <View style={styles.hintRow}>
+          <Ionicons name="information-circle-outline" size={14} color={GREEN} />
+          <Text style={styles.vendorHint}>The vendor will login with this email to manage services & slots</Text>
+        </View>
 
-        <Text style={styles.label}>Timing</Text>
+        {/* Timing */}
+        <Text style={styles.label}>Business Hours</Text>
         <View style={styles.timingRow}>
           <View style={styles.timingField}>
             <Text style={styles.timingLabel}>Opens at</Text>
@@ -141,12 +148,16 @@ export default function OnboardScreen() {
           </View>
         </View>
 
+        {/* Open toggle */}
         <View style={styles.toggleRow}>
-          <Text style={styles.toggleLabel}>Store is currently open</Text>
+          <View>
+            <Text style={styles.toggleLabel}>Currently Open</Text>
+            <Text style={styles.toggleSub}>Store is accepting bookings</Text>
+          </View>
           <Switch
             value={isOpen}
             onValueChange={setIsOpen}
-            trackColor={{ false: '#ddd', true: ACCENT }}
+            trackColor={{ false: '#ddd', true: GREEN }}
             thumbColor="#fff"
           />
         </View>
@@ -163,7 +174,7 @@ export default function OnboardScreen() {
           ) : (
             <>
               <Text style={styles.nextBtnText}>List Store</Text>
-              <Ionicons name="arrow-forward" size={18} color="#fff" />
+              <Ionicons name="checkmark" size={20} color="#fff" />
             </>
           )}
         </TouchableOpacity>
@@ -173,57 +184,60 @@ export default function OnboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1, backgroundColor: CREAM },
   header: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    paddingHorizontal: 16, paddingVertical: 14,
-    borderBottomWidth: 1, borderBottomColor: '#f0f0f0',
+    flexDirection: 'row', alignItems: 'center', gap: 14,
+    paddingHorizontal: 20, paddingTop: 16, paddingBottom: 20,
+    backgroundColor: GREEN_DARK,
   },
-  backBtn: { padding: 4 },
-  headerTitle: { fontSize: 18, fontWeight: '700', color: '#1a1a1a' },
-  stepRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    paddingHorizontal: 20, paddingVertical: 12, backgroundColor: '#fafafa',
+  backBtn: { padding: 2 },
+  headerTitle: { fontSize: 20, fontWeight: '800', color: '#fff' },
+  headerSub: { fontSize: 13, color: 'rgba(255,255,255,0.6)', marginTop: 2 },
+  content: { padding: 20, paddingBottom: 24 },
+  label: {
+    fontSize: 12, fontWeight: '700', color: '#555',
+    textTransform: 'uppercase', letterSpacing: 0.5,
+    marginTop: 18, marginBottom: 8,
   },
-  stepDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: ACCENT },
-  stepDotInactive: { backgroundColor: '#ddd' },
-  stepLine: { flex: 1, height: 2, backgroundColor: '#ddd' },
-  stepLabel: { fontSize: 12, color: '#888', marginLeft: 8 },
-  content: { padding: 20, gap: 4, paddingBottom: 20 },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#1a1a1a', marginBottom: 12 },
-  label: { fontSize: 13, fontWeight: '600', color: '#444', marginTop: 12, marginBottom: 4 },
   input: {
-    borderWidth: 1, borderColor: '#e0e0e0', borderRadius: 10,
-    paddingHorizontal: 14, paddingVertical: 11,
-    fontSize: 14, color: '#1a1a1a', backgroundColor: '#fafafa',
+    borderWidth: 1.5, borderColor: '#e0e0e0', borderRadius: 10,
+    paddingHorizontal: 14, paddingVertical: 12,
+    fontSize: 14, color: GREEN_DARK, backgroundColor: '#fff',
   },
-  multilineInput: { minHeight: 64, textAlignVertical: 'top' },
-  chipsScroll: { marginVertical: 4 },
+  multilineInput: { minHeight: 68, textAlignVertical: 'top' },
+  chipsScroll: { marginBottom: 4 },
   chip: {
     borderWidth: 1.5, borderColor: '#ddd', borderRadius: 20,
     paddingHorizontal: 16, paddingVertical: 8, marginRight: 8,
     backgroundColor: '#fff',
   },
+  chipActive: { backgroundColor: GREEN_DARK, borderColor: GREEN_DARK },
   chipText: { fontSize: 13, fontWeight: '600', color: '#555' },
+  chipTextActive: { color: '#fff' },
+  hintRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
+  vendorHint: { fontSize: 12, color: '#666', flex: 1, lineHeight: 16 },
   timingRow: { flexDirection: 'row', gap: 12 },
   timingField: { flex: 1 },
-  timingLabel: { fontSize: 12, color: '#888', marginBottom: 4 },
+  timingLabel: { fontSize: 12, color: '#888', marginBottom: 6, fontWeight: '600' },
   timingInput: {
-    borderWidth: 1, borderColor: '#e0e0e0', borderRadius: 10,
-    paddingHorizontal: 12, paddingVertical: 10,
-    fontSize: 14, color: '#1a1a1a', backgroundColor: '#fafafa',
+    borderWidth: 1.5, borderColor: '#e0e0e0', borderRadius: 10,
+    paddingHorizontal: 12, paddingVertical: 11,
+    fontSize: 14, color: GREEN_DARK, backgroundColor: '#fff',
   },
   toggleRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    marginTop: 16, padding: 14, backgroundColor: '#f8f4fc',
-    borderRadius: 10,
+    marginTop: 18, padding: 16, backgroundColor: MINT,
+    borderRadius: 12,
   },
-  toggleLabel: { fontSize: 14, color: '#1a1a1a', fontWeight: '500' },
-  vendorHint: { fontSize: 12, color: '#888', marginTop: 4, marginBottom: 4, fontStyle: 'italic' },
-  footer: { padding: 16, borderTopWidth: 1, borderTopColor: '#f0f0f0' },
+  toggleLabel: { fontSize: 14, color: GREEN_DARK, fontWeight: '700' },
+  toggleSub: { fontSize: 12, color: '#555', marginTop: 2 },
+  footer: {
+    padding: 16, paddingBottom: 28,
+    backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#e8e8e8',
+  },
   nextBtn: {
-    backgroundColor: ACCENT, borderRadius: 12,
-    paddingVertical: 15, flexDirection: 'row',
+    backgroundColor: GREEN, borderRadius: 12,
+    paddingVertical: 16, flexDirection: 'row',
     alignItems: 'center', justifyContent: 'center', gap: 8,
   },
   nextBtnDisabled: { opacity: 0.4 },

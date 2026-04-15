@@ -56,12 +56,17 @@ public class ClinicController {
     }
 
     @PostMapping("/slots/{slotId}/book")
-    public ResponseEntity<?> bookSlot(@PathVariable Long slotId) {
+    public ResponseEntity<?> bookSlot(
+            @PathVariable Long slotId,
+            @RequestBody(required = false) Map<String, Object> body) {
         return slotRepository.findById(slotId).map(slot -> {
             if (!slot.isAvailable()) {
                 return ResponseEntity.badRequest().body(Map.of("message", "Slot is already booked"));
             }
             slot.setAvailable(false);
+            if (body != null && body.get("email") instanceof String email && !email.isBlank()) {
+                slot.setBookedByEmail(email);
+            }
             slotRepository.save(slot);
             return ResponseEntity.ok(Map.of(
                     "slotId", slot.getId(),
@@ -70,6 +75,26 @@ public class ClinicController {
                     "message", "Booking confirmed"
             ));
         }).orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/bookings")
+    @jakarta.transaction.Transactional
+    public ResponseEntity<?> getBookingsByEmail(@RequestParam String email) {
+        List<AppointmentSlot> slots = slotRepository.findByBookedByEmailAndAvailableFalse(email);
+        return ResponseEntity.ok(slots.stream().map(s -> {
+            Department dept = s.getDepartment();
+            String storeName = (dept.getStore() != null && dept.getStore().getName() != null)
+                    ? dept.getStore().getName() : "";
+            return Map.of(
+                    "slotId", s.getId(),
+                    "date", s.getDate(),
+                    "time", s.getTime(),
+                    "deptName", dept.getName() != null ? dept.getName() : "",
+                    "doctorName", dept.getDoctorName() != null ? dept.getDoctorName() : "",
+                    "consultationFee", dept.getConsultationFee(),
+                    "storeName", storeName
+            );
+        }).toList());
     }
 
     @PostMapping("/slots/{slotId}/cancel")

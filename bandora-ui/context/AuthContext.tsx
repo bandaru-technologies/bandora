@@ -4,6 +4,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 type AuthUser = {
   name: string;
   email: string;
+  role?: 'CUSTOMER' | 'VENDOR';
+  storeId?: number;
+  storeName?: string;
+  storeCategory?: string;
 };
 
 type AuthContextType = {
